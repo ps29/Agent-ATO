@@ -2,7 +2,7 @@
 
 A local web app that watches Claude Code while it works. It logs every action, labels it, and shows each session as a live timeline.
 
-It follows the idea of *Agent ATO: Visualizing Agent Interaction Timelines from Logs* (arXiv 2609.08301). Every interaction is tagged **Discovery**, **Reading**, **Writing** or **Execution**. A token chart shows whether tokens came from long model output or from large tool results.
+This project is based on the paper [*Agent ATO: Visualizing Agent Interaction Timelines from Logs*](https://arxiv.org/abs/2609.08301) by Takuto Kawamoto, Yoshiki Higo and Raula Gaikovina Kula (The University of Osaka). See [Credits](#credits). Every interaction is tagged **Discovery**, **Reading**, **Writing** or **Execution**. A token chart shows whether tokens came from long model output or from large tool results.
 
 ## What you get
 
@@ -77,6 +77,16 @@ docs/             architecture, tagging rules, hooks, data model, development
 ```
 
 More: [architecture](docs/architecture.md) · [tagging rules](docs/tagging-rules.md) · [data model](docs/data-model.md) · [development](docs/development.md)
+
+## Credits
+
+The timeline design comes from the Agent ATO paper: the all-interactions row, the filtered Discovery, Reading, Writing and Execution rows, and the token view that separates model output from tool results.
+
+> Takuto Kawamoto, Yoshiki Higo and Raula Gaikovina Kula. *Agent ATO: Visualizing Agent Interaction Timelines from Logs.* arXiv:2609.08301, 2026. https://arxiv.org/abs/2609.08301
+
+This is an independent implementation. It is not affiliated with or endorsed by the paper's authors, and it is a different tool: it reads Claude Code transcripts rather than Pi agent logs, runs as a live web app, and adds a SQLite log, search, alerts and hooks. The authors' own prototype and replication package are linked from the paper.
+
+Ideas for the context view, alerts and search were also inspired by [claude-devtools](https://github.com/matt1398/claude-devtools) (MIT). No code was copied from it.
 
 ## License
 

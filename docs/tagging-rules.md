@@ -1,5 +1,7 @@
 # Tagging rules
 
+The four tags (Discovery, Reading, Writing, Execution) come from the [Agent ATO paper](https://arxiv.org/abs/2609.08301). The concrete rules below are this project's own, adapted to Claude Code's tools.
+
 Each tool call gets zero or more tags. An interaction carries the union of its tool calls' tags. Rules are in `packages/shared/src/classify/` and tested in `packages/shared/test/classify.test.ts`.
 
 | Tag | Name | Examples |
