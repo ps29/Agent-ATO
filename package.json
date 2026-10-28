@@ -1,0 +1,33 @@
+{
+  "name": "agent-ato",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Live monitor and logger for Claude Code sessions, with Agent ATO style timelines",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "build": "npm run build -w @agent-ato/shared && npm run build -w @agent-ato/web && npm run build -w @agent-ato/server",
+    "start": "npm start -w @agent-ato/server",
+    "test": "npm test --workspaces --if-present",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.6.6",
+    "eslint": "^10.13.0",
+    "prettier": "^3.9.10",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.72.1",
+    "vitest": "^4.1.12"
+  }
+}

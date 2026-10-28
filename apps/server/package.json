@@ -1,0 +1,26 @@
+{
+  "name": "@agent-ato/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "agent-ato": "dist/cli.js"
+  },
+  "scripts": {
+    "dev": "tsx watch src/cli.ts start",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/cli.js start",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.15"
+  },
+  "dependencies": {
+    "@agent-ato/shared": "*",
+    "@fastify/static": "^10.1.8",
+    "chokidar": "^6.0.0",
+    "fastify": "^5.12.7",
+    "zod": "^4.6.7"
+  }
+}
