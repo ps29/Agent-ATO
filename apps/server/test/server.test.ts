@@ -91,6 +91,16 @@ describe('http api', () => {
     expect(events.at(-1)).toMatchObject({ type: 'hook', event: 'PreToolUse', toolUseId: 'u' });
   });
 
+  it('returns one interaction with tool details', async () => {
+    const { app, watcher } = setup();
+    writeFileSync(sessionFile, assistant('r1', [{ type: 'tool_use', id: 't', name: 'Bash', input: { command: 'ls' } }]));
+    watcher.ingest(sessionFile);
+    const ok = await app.inject({ url: '/api/interaction?session=sess1&idx=0', headers: H });
+    expect(ok.json().tools[0]).toMatchObject({ name: 'Bash', status: 'pending' });
+    expect((await app.inject({ url: '/api/interaction?session=sess1&idx=9', headers: H })).statusCode).toBe(404);
+    expect((await app.inject({ url: '/api/interaction?session=sess1&idx=x', headers: H })).statusCode).toBe(404);
+  });
+
   it('exports csv with formula neutralising', async () => {
     const { app, watcher } = setup();
     writeFileSync(sessionFile, assistant('r1', [{ type: 'tool_use', id: 't', name: 'Bash', input: { command: '=evil' } }]));

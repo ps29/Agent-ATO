@@ -4,7 +4,33 @@ import { evaluate, DEFAULT_ALERTS, type AlertConfig, type AlertHit } from './ale
 import { api, type HookRow, type ServerEvent, type SessionRow } from './api';
 import { mergeItems } from './timeline/math';
 
-export type View = 'live' | 'log' | 'stats' | 'memory';
+export type View = 'live' | 'feed' | 'log' | 'stats' | 'memory';
+
+export interface FeedRow {
+  key: string;
+  sessionId: string;
+  index: number;
+  ts: number;
+  tags: string;
+  label: string;
+  status: 'running' | 'ok' | 'error';
+  narration: string;
+  outputTokens: number;
+}
+
+const FEED_MAX = 500;
+
+const toFeedRow = (it: Interaction): FeedRow => ({
+  key: `${it.sessionId}:${it.id}`,
+  sessionId: it.sessionId,
+  index: it.index,
+  ts: it.endMs ?? it.startMs ?? Date.now(),
+  tags: it.tags.join(''),
+  label: it.label,
+  status: it.hasError ? 'error' : it.tools.some((t) => t.status === 'pending') ? 'running' : 'ok',
+  narration: it.narration.trim().slice(0, 240),
+  outputTokens: it.outputTokens,
+});
 
 const load = <T,>(key: string, fallback: T): T => {
   try {
@@ -38,6 +64,7 @@ interface State {
   selectedIndex: number | null;
   alerts: AlertConfig;
   alertFeed: (AlertHit & { ts: number })[];
+  feed: FeedRow[];
 
   init: () => void;
   select: (id: string, index?: number | null) => Promise<void>;
@@ -66,6 +93,7 @@ export const useStore = create<State>((set, get) => ({
   selectedIndex: null,
   alerts: load('ato.alerts', DEFAULT_ALERTS),
   alertFeed: [],
+  feed: [],
 
   init() {
     if (es) return;
@@ -73,6 +101,14 @@ export const useStore = create<State>((set, get) => ({
       set({ sessions });
       if (!get().selectedId && sessions[0]) void get().select(sessions[0].id);
     });
+    // Seed the feed with recent history; rows after this point arrive live.
+    void api.log({}).then((rows) => {
+      const seeded: FeedRow[] = rows.slice(0, 100).map((r) => ({
+        key: `${r.session_id}:seed:${r.idx}`, sessionId: r.session_id, index: r.idx, ts: r.start_ms ?? 0,
+        tags: r.tags, label: r.label, status: r.has_error ? 'error' : 'ok', narration: '', outputTokens: 0,
+      }));
+      set((st) => ({ feed: [...st.feed, ...seeded.filter((x) => !st.feed.some((f) => f.sessionId === x.sessionId && f.index === x.index))] }));
+    }).catch(() => undefined);
     es = new EventSource('/api/stream');
     es.onopen = () => set({ connected: true });
     es.onerror = () => set({ connected: false });
@@ -135,7 +171,20 @@ function applyEvent(ev: ServerEvent, set: Set, get: () => State): void {
     }
     return;
   }
-  // interactions
+  // interactions: update the cross-session feed in place, new rows go on top
+  set((s) => {
+    const incoming = ev.items.map(toFeedRow);
+    const byKey = new Map(incoming.map((r) => [r.key, r]));
+    const used = new Set<string>();
+    const updated = s.feed.map((f) => {
+      const r = byKey.get(f.key) ?? incoming.find((x) => x.sessionId === f.sessionId && x.index === f.index);
+      if (!r) return f;
+      used.add(r.key);
+      return r;
+    });
+    const fresh = incoming.filter((r) => !used.has(r.key)).reverse();
+    return { feed: [...fresh, ...updated].slice(0, FEED_MAX) };
+  });
   for (const it of ev.items) {
     for (const hit of evaluate(it, get().alerts)) {
       if (fired.has(hit.key)) continue;

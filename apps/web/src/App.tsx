@@ -2,13 +2,14 @@ import { useEffect } from 'react';
 import { Palette } from './components/Palette';
 import { Sidebar } from './components/Sidebar';
 import { useStore, type View } from './store';
+import { Feed } from './views/Feed';
 import { Live } from './views/Live';
 import { Log } from './views/Log';
 import { Memory } from './views/Memory';
 import { Stats } from './views/Stats';
 
 const VIEWS: { id: View; label: string }[] = [
-  { id: 'live', label: 'Live' }, { id: 'log', label: 'Log' }, { id: 'stats', label: 'Stats' }, { id: 'memory', label: 'Memory' },
+  { id: 'live', label: 'Live' }, { id: 'feed', label: 'Feed' }, { id: 'log', label: 'Log' }, { id: 'stats', label: 'Stats' }, { id: 'memory', label: 'Memory' },
 ];
 
 export function App() {
@@ -33,6 +34,7 @@ export function App() {
       <Sidebar />
       <main className="main">
         {view === 'live' && <Live />}
+        {view === 'feed' && <Feed />}
         {view === 'log' && <Log />}
         {view === 'stats' && <Stats />}
         {view === 'memory' && <Memory />}

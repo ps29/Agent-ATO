@@ -70,6 +70,7 @@ const q = (o: Record<string, string | undefined>): string =>
 export const api = {
   sessions: () => get<SessionRow[]>('/api/sessions'),
   session: (id: string) => get<Snapshot>(`/api/session?${q({ id })}`),
+  interaction: (session: string, idx: number) => get<Interaction>(`/api/interaction?${q({ session, idx: String(idx) })}`),
   search: (text: string) => get<SearchHit[]>(`/api/search?${q({ q: text })}`),
   log: (f: { tag?: string; errors?: boolean; session?: string }) =>
     get<LogRow[]>(`/api/log?${q({ tag: f.tag, errors: f.errors ? '1' : undefined, session: f.session })}`),

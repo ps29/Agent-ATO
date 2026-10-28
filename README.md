@@ -7,6 +7,7 @@ This project is based on the paper [*Agent ATO: Visualizing Agent Interaction Ti
 ## What you get
 
 - **Live timeline** per session: an all-interactions row plus one row per tag, and an aligned token chart with a context-size line. New interactions appear within about a second.
+- **Live feed**: a scrolling log of every action, newest first, with tags, status (running, ok, error), token counts and the agent's narration. Use the **Feed** tab for all sessions at once, or the panel under the timeline in **Live** for the selected session. Pause, filter by tag, or show errors only.
 - **Detail panel** for each interaction: the prompt, visible narration, reasoning metrics, every tool call with its input and output, and an estimate of what grew the context.
 - **Sub-agents** shown under their parent session.
 - **Event log** (filter by tag or errors) and **full-text search** across every session (`Ctrl K`).

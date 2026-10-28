@@ -132,3 +132,19 @@ tr.click:hover { background: var(--panel-2); cursor: pointer; }
   .sidebar { max-height: 30vh; border-right: 0; border-bottom: 1px solid var(--border); }
   .main { padding: 8px 12px; }
 }
+
+.feedlist { overflow: auto; border: 1px solid var(--border); border-radius: 6px; }
+.feedrow {
+  display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; padding: 5px 10px;
+  border-bottom: 1px solid var(--border); border-left: 3px solid transparent; cursor: pointer;
+}
+.feedrow:hover { background: var(--panel-2); }
+.feedrow.error { border-left-color: var(--err); }
+.feedrow.running { border-left-color: var(--tag-e); }
+.feedtime { font-variant-numeric: tabular-nums; font-size: 12px; min-width: 70px; }
+.feedsess { color: #fff; font-size: 11px; padding: 1px 8px; border-radius: 999px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.feedlabel { flex: 1; min-width: 120px; font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.feednarr { flex-basis: 100%; font-size: 12px; padding-left: 80px; }
+.feedexp { flex-basis: 100%; display: flex; flex-direction: column; gap: 6px; padding: 6px 0 6px 20px; cursor: default; }
+.feedexp pre { max-height: 220px; overflow: auto; background: var(--panel-2); border-radius: 6px; padding: 6px 8px; }
+.feedexp button { align-self: flex-start; }

@@ -152,6 +152,11 @@ export class Repo {
     return { session: toSession(r), prompts: JSON.parse(r.prompts), items };
   }
 
+  getInteraction(sessionId: string, idx: number): Interaction | null {
+    const r = this.db.prepare('SELECT data FROM interactions WHERE session_id = ? AND idx = ?').get(sessionId, idx) as Row | undefined;
+    return r ? (JSON.parse(r.data) as Interaction) : null;
+  }
+
   search(q: string, limit = 50): SearchHit[] {
     const match = q
       .split(/\s+/)

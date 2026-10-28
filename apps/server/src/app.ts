@@ -55,6 +55,13 @@ export function buildApp(deps: AppDeps): FastifyInstance {
     return { ...snap, session: withActive(snap.session) };
   });
 
+  // One interaction with its tool inputs and outputs, for expanding a feed row.
+  app.get<{ Querystring: { session?: string; idx?: string } }>('/api/interaction', async (req, reply) => {
+    const idx = Number(req.query.idx);
+    const it = req.query.session && Number.isInteger(idx) ? repo.getInteraction(req.query.session, idx) : null;
+    return it ?? reply.code(404).send({ error: 'not found' });
+  });
+
   app.get<{ Querystring: { q?: string } }>('/api/search', async (req) => repo.search(req.query.q ?? ''));
 
   app.get<{ Querystring: { tag?: string; errors?: string; session?: string; before?: string } }>('/api/log', async (req) =>

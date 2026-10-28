@@ -2,6 +2,7 @@ import { TAG_NAMES, TAG_ORDER } from '@agent-ato/shared';
 import { useEffect, useMemo, useState } from 'react';
 import { api, type HookRow } from '../api';
 import { AlertsPanel } from '../components/AlertsPanel';
+import { FeedList } from '../components/FeedList';
 import { Detail } from '../components/Detail';
 import { useStore } from '../store';
 import { Timeline } from '../timeline/Timeline';
@@ -79,6 +80,10 @@ export function Live() {
           <Timeline items={items} prompts={prompts} compactions={meta?.compactions ?? []} pendingIds={pendingIds}
             active={Boolean(session?.active)} follow={followLatest} selected={selectedIndex} onSelect={setSelectedIndex} />
         ) : (<div className="muted">Loading…</div>)}
+      </div>
+
+      <div className="card">
+        <FeedList sessionId={selectedId} compact onOpen={(_, idx) => setSelectedIndex(idx)} />
       </div>
 
       <AlertsPanel />
