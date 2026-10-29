@@ -14,6 +14,7 @@ import './themes.css';
 import './theme.css';
 import './extras.css';
 import './redesign.css';
+import './mascot.css';
 
 initSettings();
 

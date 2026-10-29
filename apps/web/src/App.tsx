@@ -3,6 +3,7 @@ import { ControlBar } from './components/ControlBar';
 import { DesignToggle } from './components/DesignToggle';
 import { DisplaySettings } from './components/DisplaySettings';
 import { HaltButton } from './components/HaltButton';
+import { Mascot } from './components/Mascot';
 import { Palette } from './components/Palette';
 import { Sidebar } from './components/Sidebar';
 import { useStore, type View } from './store';
@@ -32,7 +33,7 @@ export function App() {
   return (
     <div className="app">
       <header className="header">
-        <h1>Agent ATO</h1>
+        <h1><Mascot />Agent ATO</h1>
         <div className="tabs">
           {VIEWS.map((v) => (<button key={v.id} className={view === v.id ? 'active' : ''} onClick={() => setView(v.id)}>{v.label}</button>))}
         </div>
