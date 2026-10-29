@@ -1,0 +1,166 @@
+/*
+ * Colour themes. settings.ts always sets data-theme on <html> (resolving "system" itself),
+ * so each theme is one block of tokens. Pairs are chosen for WCAG AA contrast on their background.
+ */
+:root,
+:root[data-theme='light'] {
+  --bg: #f6f7f9;
+  --panel: #ffffff;
+  --panel-2: #eef0f3;
+  --border: #c9ced6;
+  --text: #1c2330;
+  --muted: #566074;
+  --accent: #2f5fd8;
+  --tag-d: #2f7de1;
+  --tag-r: #1f8a57;
+  --tag-w: #d9463e;
+  --tag-e: #b98a0f;
+  --tag-none: #c3c8d0;
+  --tok-out: #e8833a;
+  --tok-think: #a3481a;
+  --tok-tool: #4f8fd6;
+  --tok-ctx: #7a6bd8;
+  --ok: #1f8a57;
+  --err: #c93a33;
+  --code-bg: #f3f5f8;
+  --syn-fg: #24292f;
+  --syn-comment: #6a737d;
+  --syn-keyword: #cf222e;
+  --syn-string: #0a3069;
+  --syn-number: #0550ae;
+  --syn-fn: #8250df;
+  --syn-type: #953800;
+  --syn-add-bg: rgba(31, 138, 87, 0.16);
+  --syn-del-bg: rgba(201, 58, 51, 0.16);
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --bg: #12151b;
+  --panel: #1a1f28;
+  --panel-2: #222834;
+  --border: #364052;
+  --text: #e6e9ef;
+  --muted: #9aa5b8;
+  --accent: #6c93ff;
+  --tag-d: #4a96f0;
+  --tag-r: #3dbb80;
+  --tag-w: #ef6159;
+  --tag-e: #e8b83a;
+  --tag-none: #3a4252;
+  --tok-out: #f09651;
+  --tok-think: #b9561f;
+  --tok-tool: #5f9fe6;
+  --tok-ctx: #9486ef;
+  --ok: #3dbb80;
+  --err: #ef6159;
+  --code-bg: #12161d;
+  --syn-fg: #e6edf3;
+  --syn-comment: #8b949e;
+  --syn-keyword: #ff7b72;
+  --syn-string: #a5d6ff;
+  --syn-number: #79c0ff;
+  --syn-fn: #d2a8ff;
+  --syn-type: #ffa657;
+  --syn-add-bg: rgba(61, 187, 128, 0.2);
+  --syn-del-bg: rgba(239, 97, 89, 0.2);
+  color-scheme: dark;
+}
+
+/* Solarized, with the body text darkened from base00 to base01 so it passes AA on the cream background. */
+:root[data-theme='solarized-light'] {
+  --bg: #eee8d5;
+  --panel: #fdf6e3;
+  --panel-2: #f3ecd4;
+  --border: #cfc8b0;
+  --text: #3b4f56;
+  --muted: #586e75;
+  --accent: #1a6fad;
+  --tag-d: #268bd2;
+  --tag-r: #6c7a00;
+  --tag-w: #dc322f;
+  --tag-e: #a67c00;
+  --tag-none: #c9c3ad;
+  --tok-out: #cb4b16;
+  --tok-think: #a53a0e;
+  --tok-tool: #268bd2;
+  --tok-ctx: #6c71c4;
+  --ok: #6c7a00;
+  --err: #c82926;
+  --code-bg: #f6efd8;
+  --syn-fg: #3b4f56;
+  --syn-comment: #657b83;
+  --syn-keyword: #6c7a00;
+  --syn-string: #1f7f78;
+  --syn-number: #b3430f;
+  --syn-fn: #1a6fad;
+  --syn-type: #8f6b00;
+  --syn-add-bg: rgba(133, 153, 0, 0.2);
+  --syn-del-bg: rgba(220, 50, 47, 0.16);
+  color-scheme: light;
+}
+
+:root[data-theme='solarized-dark'] {
+  --bg: #002b36;
+  --panel: #073642;
+  --panel-2: #0c4452;
+  --border: #1f5766;
+  --text: #a3b1b2;
+  --muted: #8a9a9c;
+  --accent: #4aa3e0;
+  --tag-d: #268bd2;
+  --tag-r: #859900;
+  --tag-w: #dc322f;
+  --tag-e: #b58900;
+  --tag-none: #1f5766;
+  --tok-out: #cb4b16;
+  --tok-think: #b5532a;
+  --tok-tool: #268bd2;
+  --tok-ctx: #6c71c4;
+  --ok: #859900;
+  --err: #ef5350;
+  --code-bg: #00212b;
+  --syn-fg: #a3b1b2;
+  --syn-comment: #7f9193;
+  --syn-keyword: #859900;
+  --syn-string: #2aa198;
+  --syn-number: #d9663a;
+  --syn-fn: #4aa3e0;
+  --syn-type: #b58900;
+  --syn-add-bg: rgba(133, 153, 0, 0.25);
+  --syn-del-bg: rgba(220, 50, 47, 0.25);
+  color-scheme: dark;
+}
+
+/* Maximum contrast: pure black and white, thick borders, bright accents. */
+:root[data-theme='contrast'] {
+  --bg: #000000;
+  --panel: #000000;
+  --panel-2: #1a1a1a;
+  --border: #ffffff;
+  --text: #ffffff;
+  --muted: #d6d6d6;
+  --accent: #ffd400;
+  --tag-d: #4db3ff;
+  --tag-r: #4cff8a;
+  --tag-w: #ff6b6b;
+  --tag-e: #ffd400;
+  --tag-none: #8c8c8c;
+  --tok-out: #ffa24d;
+  --tok-think: #ff7a3d;
+  --tok-tool: #4db3ff;
+  --tok-ctx: #b9a8ff;
+  --ok: #4cff8a;
+  --err: #ff6b6b;
+  --code-bg: #0a0a0a;
+  --syn-fg: #ffffff;
+  --syn-comment: #c8c8c8;
+  --syn-keyword: #ff8aa0;
+  --syn-string: #9fffa0;
+  --syn-number: #7fd1ff;
+  --syn-fn: #ffd866;
+  --syn-type: #ffb86c;
+  --syn-add-bg: rgba(76, 255, 138, 0.28);
+  --syn-del-bg: rgba(255, 107, 107, 0.3);
+  color-scheme: dark;
+}

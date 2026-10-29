@@ -12,6 +12,14 @@ This project is based on the paper [*Agent ATO: Visualizing Agent Interaction Ti
 - **Sub-agents** shown under their parent session.
 - **Event log** (filter by tag or errors) and **full-text search** across every session (`Ctrl K`).
 - **Alerts** for tool errors, `.env`/key/credential paths, large responses, and your own regex.
+- **Operations** tab: every file and command operation as Create / Read / Update / Delete, with the code or command in a syntax-highlighted box.
+- **Risk labels** on each action (low to critical) with the reason, so dangerous commands stand out. See [audit and Guard](docs/audit-and-guard.md).
+- **Reasoning** tab: the agent's commentary and hidden-thinking size beside each action and its risk.
+- **Audit** tab: a permanent, hash-chained record of everything the agent did, with a verify button.
+- **Guard** tab and a **Halt agent** button: deny or ask before risky actions, using rules you write (needs the hooks).
+- **Reports**: generate a draft post-incident review, RCA, change log or RFC from any session.
+- **Display** settings: Solarized, dark, light and high-contrast themes; Atkinson Hyperlegible, OpenDyslexic and JetBrains Mono fonts; text size, spacing and bold.
+- **Pause, restart and stop** the server from the header.
 - **Stats**, **MEMORY.md viewer**, and **export** to JSON, CSV or Markdown.
 - A **SQLite log** that keeps history after Claude Code deletes old transcripts.
 

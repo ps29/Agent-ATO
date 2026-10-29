@@ -1,4 +1,4 @@
-import type { Interaction, Prompt, SessionMeta } from '@agent-ato/shared';
+import { assessRisk, riskAtLeast, toOperation, type CrudOp, type Risk, type Interaction, type Operation, type Prompt, type SessionMeta } from '@agent-ato/shared';
 import type { DatabaseSync, StatementSync } from 'node:sqlite';
 import { transaction } from './db.js';
 
@@ -40,6 +40,16 @@ export interface SearchHit {
   sessionId: string;
   idx: number;
   snippet: string;
+}
+
+export interface OperationRow extends Operation {
+  sessionId: string;
+  index: number;
+  ts: number;
+  status: string;
+  output: string;
+  risk: Risk;
+  riskReasons: string[];
 }
 
 type Row = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -155,6 +165,49 @@ export class Repo {
   getInteraction(sessionId: string, idx: number): Interaction | null {
     const r = this.db.prepare('SELECT data FROM interactions WHERE session_id = ? AND idx = ?').get(sessionId, idx) as Row | undefined;
     return r ? (JSON.parse(r.data) as Interaction) : null;
+  }
+
+  /**
+   * Tool calls across all sessions as CRUD operations, newest first. Scans interaction rows in
+   * batches until enough matching operations are found, so a rare filter still pages correctly.
+   */
+  operations(f: { ops?: CrudOp[]; sessionId?: string; q?: string; minRisk?: Risk; before?: number; limit?: number }): { items: OperationRow[]; next: number | null } {
+    const limit = Math.min(f.limit ?? 100, 300);
+    const needle = f.q?.toLowerCase();
+    const items: OperationRow[] = [];
+    let cursor = f.before ?? Number.MAX_SAFE_INTEGER;
+    for (let scanned = 0; scanned < 5000 && items.length < limit; ) {
+      const rows = this.db
+        .prepare(`SELECT session_id, idx, start_ms, data FROM interactions
+          WHERE start_ms < ? ${f.sessionId ? 'AND session_id = ?' : ''} ORDER BY start_ms DESC LIMIT 200`)
+        .all(...(f.sessionId ? [cursor, f.sessionId] : [cursor])) as Row[];
+      if (!rows.length) return { items, next: null };
+      scanned += rows.length;
+      for (const r of rows) {
+        cursor = r.start_ms ?? 0;
+        const it = JSON.parse(r.data) as Interaction;
+        for (const t of it.tools) {
+          const o = toOperation(t);
+          if (!o || (f.ops?.length && !f.ops.includes(o.op))) continue;
+          if (needle && !`${o.target}
+${o.code}`.toLowerCase().includes(needle)) continue;
+          const risk = assessRisk(t);
+          if (f.minRisk && !riskAtLeast(risk.level, f.minRisk)) continue;
+          items.push({
+            ...o, sessionId: r.session_id, index: r.idx, ts: r.start_ms ?? 0, status: t.status, output: t.output.slice(0, 4000),
+            risk: risk.level, riskReasons: risk.reasons,
+          });
+        }
+      }
+      if (rows.length < 200) return { items, next: null };
+    }
+    return { items, next: items.length ? cursor : null };
+  }
+
+  /** Time of the newest hook event, or null if none has arrived. */
+  lastHookMs(): number | null {
+    const r = this.db.prepare('SELECT MAX(ts) AS t FROM hook_events').get() as { t: number | null };
+    return r.t;
   }
 
   search(q: string, limit = 50): SearchHit[] {

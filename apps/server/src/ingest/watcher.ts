@@ -1,8 +1,9 @@
-import { TranscriptParser } from '@agent-ato/shared';
+import { assessRisk, toOperation, TranscriptParser, type Interaction } from '@agent-ato/shared';
 import chokidar, { type FSWatcher } from 'chokidar';
 import { closeSync, openSync, readSync, statSync } from 'node:fs';
 import { basename, relative, sep } from 'node:path';
 import { StringDecoder } from 'node:string_decoder';
+import type { Audit, AuditEntry } from '../store/audit.js';
 import type { Repo } from '../store/repo.js';
 import type { EventHub } from './hub.js';
 
@@ -40,12 +41,15 @@ export class Watcher {
   private readonly timers = new Map<string, NodeJS.Timeout>();
   private fsw: FSWatcher | null = null;
   private queue: Promise<void> = Promise.resolve();
+  private held = new Set<string>();
+  private halted = false;
 
   constructor(
     private readonly projectsRoot: string,
     private readonly repo: Repo,
     private readonly hub: EventHub,
     private readonly debounceMs = 150,
+    private readonly audit?: Audit,
   ) {}
 
   /** Resolves once the initial scan has been ingested. */
@@ -63,6 +67,27 @@ export class Watcher {
     await this.fsw?.close();
   }
 
+  get paused(): boolean {
+    return this.halted;
+  }
+
+  /** Stop ingesting. File events are remembered and replayed on resume, so nothing is lost. */
+  pause(): void {
+    this.halted = true;
+    for (const [p, t] of this.timers) {
+      clearTimeout(t);
+      this.held.add(p);
+    }
+    this.timers.clear();
+  }
+
+  resume(): void {
+    this.halted = false;
+    const paths = [...this.held];
+    this.held.clear();
+    for (const p of paths) this.schedule(p);
+  }
+
   /** Test hook: wait for queued ingest work. */
   idle(): Promise<void> {
     return this.queue;
@@ -70,6 +95,10 @@ export class Watcher {
 
   private schedule(path: string): void {
     if (!identify(this.projectsRoot, path)) return;
+    if (this.halted) {
+      this.held.add(path);
+      return;
+    }
     clearTimeout(this.timers.get(path));
     this.timers.set(
       path,
@@ -129,6 +158,7 @@ export class Watcher {
       id: s.id, parentId: s.parentId, project: s.project, path, meta: parser.meta,
       prompts: parser.prompts, items: parser.items, changed: items, updatedMs: Math.round(mtime), fileSize: s.offset,
     });
+    if (this.audit) this.audit.appendMany(auditEntries(s.id, items));
     const row = this.repo.getSession(s.id);
     if (row) this.hub.publish({ type: 'session', session: row });
     if (items.length) {
@@ -142,3 +172,21 @@ export class Watcher {
   }
 }
 
+
+/** One audit "call" entry per tool call, plus a "result" entry once it has finished. Safe to repeat: duplicates are ignored. */
+export function auditEntries(sessionId: string, items: Interaction[]): AuditEntry[] {
+  const out: AuditEntry[] = [];
+  for (const it of items) {
+    for (const t of it.tools) {
+      const op = toOperation(t);
+      const risk = assessRisk(t);
+      const base = { sessionId, toolUseId: t.id, tool: t.name, op: op?.op ?? null, risk: risk.level, target: op?.target || t.label };
+      const ts = it.startMs ?? Date.now();
+      out.push({ ...base, ts, kind: 'call', detail: JSON.stringify({ code: (op?.code ?? t.input).slice(0, 2000), language: op?.language ?? 'json', reasons: risk.reasons }) });
+      if (t.status !== 'pending') {
+        out.push({ ...base, ts: it.endMs ?? ts, kind: 'result', detail: JSON.stringify({ status: t.status, output: t.output.slice(0, 500) }) });
+      }
+    }
+  }
+  return out;
+}

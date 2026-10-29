@@ -8,7 +8,7 @@ export const HOOK_EVENTS = [
 /** Marker present in every command this tool adds, so removal never touches user hooks. */
 export const MARKER = 'agent-ato-managed';
 
-type Settings = { hooks?: Record<string, Array<{ matcher?: string; hooks?: Array<{ type: string; command: string }> }>> } & Record<string, unknown>;
+type Settings = { hooks?: Record<string, Array<{ matcher?: string; hooks?: Array<{ type: string; command: string; timeout?: number }> }>> } & Record<string, unknown>;
 
 const isOurs = (h: { command?: string }): boolean => Boolean(h.command?.includes(MARKER));
 
@@ -31,7 +31,7 @@ export function installHooks(settingsPath: string, clientPath: string): { added:
   for (const ev of HOOK_EVENTS) {
     const groups = (s.hooks[ev] ??= []);
     if (groups.some((g) => g.hooks?.some(isOurs))) continue;
-    groups.push({ matcher: '*', hooks: [{ type: 'command', command }] });
+    groups.push({ matcher: '*', hooks: [{ type: 'command', command, timeout: ev === 'PreToolUse' ? 5 : 3 }] });
     added++;
   }
   write(settingsPath, s);

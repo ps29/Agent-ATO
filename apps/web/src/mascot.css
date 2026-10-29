@@ -1,0 +1,23 @@
+/* The header mascot (Updated design only). Twilight body, glowing antennae, eyes that track --lx/--ly. */
+.mascot { --lx: 0; --ly: 0; display: inline-block; position: relative; width: 38px; height: 30px; margin-right: 10px; vertical-align: middle; overflow: hidden; }
+.mascot-head { position: absolute; inset: 0; transition: transform 0.5s var(--spring, cubic-bezier(0.34, 1.56, 0.64, 1)); }
+.mascot:hover .mascot-head { transform: translateY(-3px) rotate(calc(var(--lx) * 3deg)); }
+.mascot-dome {
+  position: absolute; left: 3px; right: 3px; bottom: -8px; height: 24px; border-radius: 24px 24px 0 0;
+  background: radial-gradient(60% 80% at 38% 26%, #ffe3f4 0%, #ffa8d8 22%, #9a6ae0 58%, #3a2a9c 100%);
+  box-shadow: 0 0 14px rgba(255, 140, 190, 0.45);
+}
+.mascot-eyes { position: absolute; left: 0; right: 0; top: 7px; height: 10px; transform: translate(calc(var(--lx) * 2px), calc(var(--ly) * 1.2px)); transition: transform 0.2s ease-out; }
+.mascot-eye {
+  position: absolute; top: 0; width: 6px; height: 9px; border-radius: 50%; transform-origin: center;
+  background: radial-gradient(circle at 36% 28%, #4a566e, #0b1020 55%, #02040a); animation: mascot-blink 5.5s infinite;
+}
+.mascot-eye:first-child { left: 8px; }
+.mascot-eye:last-child { right: 8px; }
+.mascot-ant { position: absolute; bottom: 14px; width: 4px; height: 14px; border-radius: 3px; transform-origin: 50% 100%; background: linear-gradient(#ff9ad0, #c58bff); animation: mascot-sway 3.4s ease-in-out infinite; }
+.mascot-ant::before { content: ''; position: absolute; top: -3px; left: -1px; width: 6px; height: 6px; border-radius: 50%; background: #ffb4d8; box-shadow: 0 0 8px rgba(255, 140, 190, 0.9); }
+.mascot-ant.l { left: 9px; --a: -22deg; }
+.mascot-ant.r { right: 9px; --a: 22deg; animation-delay: 0.6s; }
+.mascot:hover .mascot-ant { animation-duration: 0.7s; }
+@keyframes mascot-blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.08); } }
+@keyframes mascot-sway { 0%, 100% { transform: rotate(var(--a)); } 50% { transform: rotate(calc(var(--a) + 9deg)); } }
