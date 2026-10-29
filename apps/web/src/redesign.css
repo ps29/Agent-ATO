@@ -14,7 +14,25 @@
   --ok: #5ee6a0;
   --err: #ff9a92;
   --code-bg: rgba(6, 10, 24, 0.55);
-  --syn-fg: #e6e9ee;
+  /* Dark-theme tokens, so code, tags and charts stay legible on the glass whatever theme is picked. */
+  --syn-fg: #e6edf3;
+  --syn-comment: #a9b3bd;
+  --syn-keyword: #ff7b72;
+  --syn-string: #a5d6ff;
+  --syn-number: #79c0ff;
+  --syn-fn: #d2a8ff;
+  --syn-type: #ffa657;
+  --syn-add-bg: rgba(61, 187, 128, 0.2);
+  --syn-del-bg: rgba(239, 97, 89, 0.2);
+  --tag-d: #4a96f0;
+  --tag-r: #3dbb80;
+  --tag-w: #ef6159;
+  --tag-e: #e8b83a;
+  --tag-none: #3a4252;
+  --tok-out: #f09651;
+  --tok-think: #b9561f;
+  --tok-tool: #5f9fe6;
+  --tok-ctx: #9486ef;
   --sky-top: #2c4a9a;
   --sky-mid: #6f8fd8;
   --glow: rgba(255, 205, 120, 0.9);
@@ -57,7 +75,8 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -1px 0 rgba(255, 255, 255, 0.06), 0 18px 40px rgba(0, 0, 0, 0.28);
 }
 [data-design='updated'] .app { gap: 12px; padding: 12px; box-sizing: border-box; }
-[data-design='updated'] .header { border-radius: 28px; padding: 6px 16px; }
+/* The header owns the Display popover, so it must stack above the panels beneath it. */
+[data-design='updated'] .header { position: relative; z-index: 35; border-radius: 28px; padding: 6px 16px; }
 [data-design='updated'] .sidebar,
 [data-design='updated'] .card,
 [data-design='updated'] .opcard { border-radius: 24px; }
@@ -69,11 +88,17 @@
  * panel, so they stay near-opaque instead of relying on the glass effect.
  */
 [data-design='updated'] .detail,
-[data-design='updated'] .popover {
+[data-design='updated'] .popover,
+[data-design='updated'] .palette {
   background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03)), rgba(12, 18, 40, 0.96);
-  backdrop-filter: none; -webkit-backdrop-filter: none; z-index: 30; border-radius: 24px 0 0 24px;
+  backdrop-filter: none; -webkit-backdrop-filter: none; border-radius: 24px 0 0 24px;
 }
 [data-design='updated'] .popover { border-radius: 20px; }
+[data-design='updated'] .palette { border-radius: 24px; }
+/* Stacking order, low to high: header 35, detail drawer 40, search palette 50, tooltip 60. */
+[data-design='updated'] .detail { z-index: 40; }
+[data-design='updated'] .palette-backdrop { z-index: 50; }
+[data-design='updated'] .tooltip { z-index: 60; }
 
 /* Pill controls with a springy press */
 [data-design='updated'] button {
@@ -104,3 +129,9 @@
 [data-design='updated'] .tooltip { background: #f2f5fa; color: #10162b; border-radius: 12px; }
 
 @keyframes ato-rise { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: none; } }
+
+/* Bare status lines sit straight on the sky, so give them a backing to stay readable. */
+[data-design='updated'] .main > .muted {
+  align-self: flex-start; padding: 8px 16px; border-radius: 16px; background: rgba(10, 16, 36, 0.58);
+  border: 1px solid rgba(255, 255, 255, 0.14); color: var(--text);
+}
