@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { ControlBar } from './components/ControlBar';
+import { DesignToggle } from './components/DesignToggle';
 import { DisplaySettings } from './components/DisplaySettings';
 import { HaltButton } from './components/HaltButton';
 import { Palette } from './components/Palette';
@@ -38,6 +39,7 @@ export function App() {
         <span className="spacer" />
         <button onClick={() => setPalette(true)}>Search <kbd>Ctrl K</kbd></button>
         <HaltButton />
+        <DesignToggle />
         <DisplaySettings />
         <ControlBar />
         <span title={connected ? 'Receiving live events' : 'Reconnecting…'}><span className={`dot ${connected ? 'live' : ''}`} /> {connected ? 'connected' : 'offline'}</span>

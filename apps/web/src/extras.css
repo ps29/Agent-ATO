@@ -92,3 +92,7 @@ button.halt.halted { animation: pulse 1.2s infinite; outline: 3px solid var(--er
 td.clip { max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .kind-guard { border-color: var(--tok-out); }
 .kind-control { border-color: var(--accent); }
+
+/* Design switch (Original / Updated) */
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; }

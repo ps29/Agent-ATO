@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 export type ThemeId = 'system' | 'light' | 'dark' | 'solarized-light' | 'solarized-dark' | 'contrast';
+export type Design = 'original' | 'updated';
 export type UiFont = 'system' | 'atkinson' | 'dyslexic';
 export type CodeFont = 'system' | 'jetbrains' | 'atkinson-mono' | 'dyslexic';
 
@@ -16,11 +17,18 @@ export interface Settings {
   /** Extra letter spacing in em. */
   spacing: number;
   reduceMotion: boolean;
+  /** Which look to render. "original" is the default and leaves the existing styles untouched. */
+  design: Design;
 }
 
 export const DEFAULTS: Settings = {
-  theme: 'system', uiFont: 'system', codeFont: 'system', size: 14, bold: false, lineHeight: 1.5, spacing: 0, reduceMotion: false,
+  theme: 'system', uiFont: 'system', codeFont: 'system', size: 14, bold: false, lineHeight: 1.5, spacing: 0, reduceMotion: false, design: 'original',
 };
+
+/** Anything other than a saved "updated" falls back to the original design. */
+export function normalizeDesign(v: unknown): Design {
+  return v === 'updated' ? 'updated' : 'original';
+}
 
 export const THEMES: { id: ThemeId; label: string }[] = [
   { id: 'system', label: 'Match system' }, { id: 'light', label: 'Light' }, { id: 'dark', label: 'Dark' },
@@ -44,7 +52,8 @@ const KEY = 'ato.settings';
 
 function load(): Settings {
   try {
-    return { ...DEFAULTS, ...(JSON.parse(localStorage.getItem(KEY) ?? '{}') as Partial<Settings>) };
+    const saved = JSON.parse(localStorage.getItem(KEY) ?? '{}') as Partial<Settings>;
+    return { ...DEFAULTS, ...saved, design: normalizeDesign(saved.design) };
   } catch {
     return DEFAULTS;
   }
@@ -56,6 +65,7 @@ export function applySettings(s: Settings): void {
   const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   root.dataset.theme = s.theme === 'system' ? (dark ? 'dark' : 'light') : s.theme;
   root.dataset.motion = s.reduceMotion ? 'reduced' : 'full';
+  root.dataset.design = s.design;
   const set = (k: string, v: string): void => root.style.setProperty(k, v);
   set('--font-ui', UI_STACKS[s.uiFont]);
   set('--font-code', CODE_STACKS[s.codeFont]);
@@ -88,7 +98,7 @@ function persist(s: Settings): void {
   try {
     localStorage.setItem(KEY, JSON.stringify({
       theme: s.theme, uiFont: s.uiFont, codeFont: s.codeFont, size: s.size, bold: s.bold,
-      lineHeight: s.lineHeight, spacing: s.spacing, reduceMotion: s.reduceMotion,
+      lineHeight: s.lineHeight, spacing: s.spacing, reduceMotion: s.reduceMotion, design: s.design,
     }));
   } catch {
     /* storage unavailable: settings last for this tab only */
