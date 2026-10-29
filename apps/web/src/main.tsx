@@ -13,6 +13,7 @@ import { initSettings } from './settings';
 import './themes.css';
 import './theme.css';
 import './extras.css';
+import './redesign.css';
 
 initSettings();
 
