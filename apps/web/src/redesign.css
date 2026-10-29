@@ -50,19 +50,30 @@
 [data-design='updated'] .popover,
 [data-design='updated'] .tl,
 [data-design='updated'] .opcard {
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.05)), rgba(10, 16, 36, 0.4);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)), rgba(10, 16, 36, 0.58);
   border: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(28px) saturate(1.7);
   -webkit-backdrop-filter: blur(28px) saturate(1.7);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -1px 0 rgba(255, 255, 255, 0.06), 0 18px 40px rgba(0, 0, 0, 0.28);
 }
 [data-design='updated'] .app { gap: 12px; padding: 12px; box-sizing: border-box; }
-[data-design='updated'] .header { border-radius: 999px; padding: 6px 16px; }
+[data-design='updated'] .header { border-radius: 28px; padding: 6px 16px; }
 [data-design='updated'] .sidebar,
 [data-design='updated'] .card,
 [data-design='updated'] .opcard { border-radius: 24px; }
 [data-design='updated'] .card { padding: 14px 18px; animation: ato-rise 0.6s var(--spring) both; }
 [data-design='updated'] .main { padding: 0 4px 12px; }
+
+/*
+ * Overlays sit on top of busy content, and a nested backdrop-filter does not blur what is behind a fixed
+ * panel, so they stay near-opaque instead of relying on the glass effect.
+ */
+[data-design='updated'] .detail,
+[data-design='updated'] .popover {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03)), rgba(12, 18, 40, 0.96);
+  backdrop-filter: none; -webkit-backdrop-filter: none; z-index: 30; border-radius: 24px 0 0 24px;
+}
+[data-design='updated'] .popover { border-radius: 20px; }
 
 /* Pill controls with a springy press */
 [data-design='updated'] button {
@@ -85,7 +96,7 @@
 /* Rows and chips */
 [data-design='updated'] .session { border-radius: 16px; transition: transform 0.4s var(--spring), background 0.2s; }
 [data-design='updated'] .session:hover { transform: translateX(3px); background: rgba(255, 255, 255, 0.12); }
-[data-design='updated'] .session.sel { border-color: rgba(255, 255, 255, 0.4); background: rgba(255, 255, 255, 0.16); }
+[data-design='updated'] .session.sel { border-color: var(--accent); background: rgba(126, 242, 255, 0.18); }
 [data-design='updated'] .badge { background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.25); }
 [data-design='updated'] .tool { border-radius: 16px; background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.14); }
 [data-design='updated'] .tool.error { border-color: rgba(255, 154, 146, 0.7); background: rgba(255, 100, 90, 0.14); }
