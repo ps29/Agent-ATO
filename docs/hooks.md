@@ -21,8 +21,8 @@ Every command it adds contains the marker `agent-ato-managed`. `uninstall-hooks`
 
 `apps/server/hook-client.mjs` reads the hook payload from stdin and POSTs it to `http://127.0.0.1:4317/ingest/hook` with the token from `~/.agent-ato/token`.
 
-- It prints nothing and always exits 0, so it can never block or fail a Claude Code action.
-- It gives up after 500 ms, so a stopped server costs nothing noticeable.
+- It always exits 0. The only thing it ever prints is a `PreToolUse` permission decision (`deny` or `ask`) when Guard asks to stop a call; see [audit-and-guard.md](audit-and-guard.md).
+- It waits up to 3 s for a `PreToolUse` decision and 400 ms for other events, and lets the call through if the server does not answer.
 - The server rejects requests without the token (401) and malformed payloads (400).
 
 Hook events are stored in SQLite and shown in the detail panel of the matching tool call, linked by `tool_use_id`. A `PreToolUse` with no `PostToolUse` yet marks the call as running.

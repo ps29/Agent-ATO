@@ -128,3 +128,85 @@ describe('hook installation', () => {
     expect(after).toEqual({ model: 'x', hooks: { Stop: [{ hooks: [{ type: 'command', command: 'echo mine' }] }] } });
   });
 });
+
+describe('process controls', () => {
+  const UI = { ...H, 'x-agent-ato-ui': '1' };
+  function withControl() {
+    const s = setup();
+    const calls: string[] = [];
+    let paused = false;
+    const app = buildApp({
+      config: { claudeRoot: tmp, dataDir: tmp, host: '127.0.0.1', port: 4317, webDir: null },
+      repo: s.repo,
+      hub: s.hub,
+      token: 'secret',
+      control: {
+        paused: () => paused,
+        pause: () => {
+          paused = true;
+        },
+        resume: () => {
+          paused = false;
+        },
+        stop: () => calls.push('stop'),
+        restart: () => calls.push('restart'),
+        supervised: true,
+      },
+    });
+    return { ...s, app, calls };
+  }
+
+  it('refuses control requests without the UI header or from a foreign origin', async () => {
+    const { app } = withControl();
+    expect(
+      (await app.inject({ method: 'POST', url: '/api/control/stop', headers: H })).statusCode,
+    ).toBe(403);
+    const foreign = await app.inject({
+      method: 'POST',
+      url: '/api/control/stop',
+      headers: { ...UI, origin: 'https://evil.example' },
+    });
+    expect(foreign.statusCode).toBe(403);
+  });
+
+  it('pauses, resumes and announces the change', async () => {
+    const { app, events } = withControl();
+    const r = await app.inject({ method: 'POST', url: '/api/control/pause', headers: UI });
+    expect(r.json()).toEqual({ paused: true });
+    expect((await app.inject({ url: '/api/control', headers: H })).json()).toMatchObject({
+      paused: true,
+      supervised: true,
+    });
+    await app.inject({ method: 'POST', url: '/api/control/resume', headers: UI });
+    expect(events.filter((e) => e.type === 'control')).toEqual([
+      { type: 'control', paused: true },
+      { type: 'control', paused: false },
+    ]);
+  });
+
+  it('stop and restart reach the process hooks', async () => {
+    const { app, calls } = withControl();
+    await app.inject({ method: 'POST', url: '/api/control/restart', headers: UI });
+    await app.inject({ method: 'POST', url: '/api/control/stop', headers: UI });
+    await new Promise((r) => setTimeout(r, 250));
+    expect(calls).toEqual(['restart', 'stop']);
+  });
+
+  it('holds file changes while paused and replays them on resume', async () => {
+    const { watcher, repo } = setup();
+    writeFileSync(
+      sessionFile,
+      line({ type: 'user', timestamp: '2026-01-01T00:00:00Z', message: { content: 'hi' } }) +
+        assistant('r1', [{ type: 'text', text: 'hello' }]),
+    );
+    watcher.pause();
+    (watcher as unknown as { schedule(p: string): void }).schedule(sessionFile);
+    await new Promise((r) => setTimeout(r, 30));
+    await watcher.idle();
+    expect(repo.getSnapshot('sess1')).toBeNull();
+    watcher.resume();
+    await new Promise((r) => setTimeout(r, 30));
+    await watcher.idle();
+    expect(repo.getSnapshot('sess1')!.items).toHaveLength(1);
+  });
+});

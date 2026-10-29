@@ -12,6 +12,8 @@ export type ServerEvent =
       /** Present only when the prompt list changed. */
       prompts?: Prompt[];
     }
+  | { type: 'control'; paused: boolean }
+  | { type: 'guard'; halted: boolean; mode: string }
   | { type: 'hook'; sessionId: string | null; event: string; toolName: string | null; toolUseId: string | null; ts: number };
 
 /** In-process pub/sub between ingest and the SSE endpoint. */

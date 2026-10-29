@@ -1,10 +1,10 @@
 import type { Interaction, Prompt, SessionMeta } from '@agent-ato/shared';
 import { create } from 'zustand';
 import { evaluate, DEFAULT_ALERTS, type AlertConfig, type AlertHit } from './alerts';
-import { api, type HookRow, type ServerEvent, type SessionRow } from './api';
+import { api, type ControlState, type GuardState, type HookRow, type ServerEvent, type SessionRow } from './api';
 import { mergeItems } from './timeline/math';
 
-export type View = 'live' | 'feed' | 'log' | 'stats' | 'memory';
+export type View = 'live' | 'feed' | 'ops' | 'reasoning' | 'audit' | 'guard' | 'log' | 'stats' | 'memory';
 
 export interface FeedRow {
   key: string;
@@ -50,6 +50,10 @@ const save = (key: string, v: unknown): void => {
 
 interface State {
   connected: boolean;
+  control: ControlState | null;
+  refreshControl: () => Promise<void>;
+  guard: GuardState | null;
+  refreshGuard: () => Promise<void>;
   sessions: SessionRow[];
   selectedId: string | null;
   items: Interaction[];
@@ -70,6 +74,8 @@ interface State {
   select: (id: string, index?: number | null) => Promise<void>;
   setView: (v: View) => void;
   setFollow: (b: boolean) => void;
+  /** Jump from a list row to that interaction in the Live timeline. */
+  openInTimeline: (sessionId: string, index: number) => void;
   setPalette: (b: boolean) => void;
   setSelectedIndex: (i: number | null) => void;
   setAlerts: (a: Partial<AlertConfig>) => void;
@@ -80,6 +86,22 @@ let es: EventSource | null = null;
 
 export const useStore = create<State>((set, get) => ({
   connected: false,
+  control: null,
+  guard: null,
+  async refreshGuard() {
+    try {
+      set({ guard: await api.guard() });
+    } catch {
+      /* guard unavailable */
+    }
+  },
+  async refreshControl() {
+    try {
+      set({ control: await api.controlState() });
+    } catch {
+      /* server unreachable */
+    }
+  },
   sessions: [],
   selectedId: null,
   items: [],
@@ -110,7 +132,11 @@ export const useStore = create<State>((set, get) => ({
       set((st) => ({ feed: [...st.feed, ...seeded.filter((x) => !st.feed.some((f) => f.sessionId === x.sessionId && f.index === x.index))] }));
     }).catch(() => undefined);
     es = new EventSource('/api/stream');
-    es.onopen = () => set({ connected: true });
+    es.onopen = () => {
+      set({ connected: true });
+      void get().refreshControl();
+      void get().refreshGuard();
+    };
     es.onerror = () => set({ connected: false });
     es.onmessage = (m) => applyEvent(JSON.parse(m.data) as ServerEvent, set, get);
   },
@@ -133,6 +159,10 @@ export const useStore = create<State>((set, get) => ({
 
   setView: (view) => set({ view }),
   setFollow: (followLatest) => set({ followLatest }),
+  openInTimeline(sessionId, index) {
+    set({ followLatest: false, view: 'live' });
+    void get().select(sessionId, index);
+  },
   setPalette: (paletteOpen) => set({ paletteOpen }),
   setSelectedIndex: (selectedIndex) => set({ selectedIndex }),
   setAlerts(a) {
@@ -158,6 +188,15 @@ function applyEvent(ev: ServerEvent, set: Set, get: () => State): void {
     if (s.followLatest && !ev.session.parentId && ev.session.active && s.selectedId !== ev.session.id) {
       void s.select(ev.session.id);
     }
+    return;
+  }
+  if (ev.type === 'guard') {
+    void get().refreshGuard();
+    return;
+  }
+  if (ev.type === 'control') {
+    const c = get().control;
+    if (c) set({ control: { ...c, paused: ev.paused } });
     return;
   }
   if (ev.type === 'hook') {

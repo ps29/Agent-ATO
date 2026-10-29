@@ -1,4 +1,4 @@
-import { TAG_NAMES, TAG_ORDER } from '@agent-ato/shared';
+import { REPORT_KINDS, TAG_NAMES, TAG_ORDER, type ReportKind } from '@agent-ato/shared';
 import { useEffect, useMemo, useState } from 'react';
 import { api, type HookRow } from '../api';
 import { AlertsPanel } from '../components/AlertsPanel';
@@ -60,6 +60,10 @@ export function Live() {
           <span className="spacer" />
           <label><input type="checkbox" checked={followLatest} onChange={(e) => setFollow(e.target.checked)} /> follow newest active session</label>
           {(['json', 'csv', 'md'] as const).map((f) => (<a key={f} href={api.exportUrl(selectedId, f)}><button>{f.toUpperCase()}</button></a>))}
+          <select value="" aria-label="Generate report" onChange={(e) => { if (e.target.value) window.open(api.reportUrl(selectedId, e.target.value as ReportKind), '_blank', 'noopener'); }}>
+            <option value="">Report…</option>
+            {REPORT_KINDS.map((k) => (<option key={k.id} value={k.id} title={k.blurb}>{k.label}</option>))}
+          </select>
         </div>
         <div className="muted">
           {meta?.cwd} {meta?.gitBranch ? `· ${meta.gitBranch}` : ''} {meta?.models.length ? `· ${meta.models.join(', ')}` : ''}

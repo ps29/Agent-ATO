@@ -48,6 +48,37 @@ const MIGRATIONS: string[] = [
   );
   CREATE INDEX hook_session ON hook_events(session_id, ts);
   `,
+  `
+  CREATE TABLE audit_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts INTEGER NOT NULL,
+    kind TEXT NOT NULL,
+    session_id TEXT,
+    tool_use_id TEXT,
+    tool TEXT,
+    op TEXT,
+    risk TEXT,
+    target TEXT,
+    detail TEXT,
+    prev_hash TEXT NOT NULL,
+    hash TEXT NOT NULL
+  );
+  CREATE UNIQUE INDEX audit_once ON audit_log(session_id, tool_use_id, kind)
+    WHERE tool_use_id IS NOT NULL AND kind IN ('call', 'result');
+  CREATE INDEX audit_ts ON audit_log(ts);
+  CREATE INDEX audit_risk ON audit_log(risk);
+  CREATE TABLE guard_rules (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    pattern TEXT NOT NULL,
+    tool TEXT,
+    action TEXT NOT NULL,
+    enabled INTEGER NOT NULL DEFAULT 1,
+    created_ms INTEGER NOT NULL
+  );
+  CREATE TABLE kv (k TEXT PRIMARY KEY, v TEXT NOT NULL);
+  `,
 ];
 
 export function openDb(path: string): DatabaseSync {

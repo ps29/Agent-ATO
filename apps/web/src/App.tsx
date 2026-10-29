@@ -1,15 +1,23 @@
 import { useEffect } from 'react';
+import { ControlBar } from './components/ControlBar';
+import { DisplaySettings } from './components/DisplaySettings';
+import { HaltButton } from './components/HaltButton';
 import { Palette } from './components/Palette';
 import { Sidebar } from './components/Sidebar';
 import { useStore, type View } from './store';
+import { Audit } from './views/Audit';
 import { Feed } from './views/Feed';
+import { Guard } from './views/Guard';
 import { Live } from './views/Live';
 import { Log } from './views/Log';
 import { Memory } from './views/Memory';
+import { Operations } from './views/Operations';
+import { Reasoning } from './views/Reasoning';
 import { Stats } from './views/Stats';
 
 const VIEWS: { id: View; label: string }[] = [
-  { id: 'live', label: 'Live' }, { id: 'feed', label: 'Feed' }, { id: 'log', label: 'Log' }, { id: 'stats', label: 'Stats' }, { id: 'memory', label: 'Memory' },
+  { id: 'live', label: 'Live' }, { id: 'feed', label: 'Feed' }, { id: 'ops', label: 'Operations' },
+  { id: 'reasoning', label: 'Reasoning' }, { id: 'audit', label: 'Audit' }, { id: 'guard', label: 'Guard' }, { id: 'log', label: 'Log' }, { id: 'stats', label: 'Stats' }, { id: 'memory', label: 'Memory' },
 ];
 
 export function App() {
@@ -29,12 +37,19 @@ export function App() {
         </div>
         <span className="spacer" />
         <button onClick={() => setPalette(true)}>Search <kbd>Ctrl K</kbd></button>
+        <HaltButton />
+        <DisplaySettings />
+        <ControlBar />
         <span title={connected ? 'Receiving live events' : 'Reconnecting…'}><span className={`dot ${connected ? 'live' : ''}`} /> {connected ? 'connected' : 'offline'}</span>
       </header>
       <Sidebar />
       <main className="main">
         {view === 'live' && <Live />}
         {view === 'feed' && <Feed />}
+        {view === 'ops' && <Operations />}
+        {view === 'reasoning' && <Reasoning />}
+        {view === 'audit' && <Audit />}
+        {view === 'guard' && <Guard />}
         {view === 'log' && <Log />}
         {view === 'stats' && <Stats />}
         {view === 'memory' && <Memory />}
