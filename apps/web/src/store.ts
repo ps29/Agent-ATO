@@ -72,6 +72,8 @@ interface State {
 
   init: () => void;
   select: (id: string, index?: number | null) => Promise<void>;
+  /** Reload sessions and the open session in place (no flicker). Used after the live stream reconnects. */
+  resync: () => Promise<void>;
   setView: (v: View) => void;
   setFollow: (b: boolean) => void;
   /** Jump from a list row to that interaction in the Live timeline. */
@@ -132,13 +134,34 @@ export const useStore = create<State>((set, get) => ({
       set((st) => ({ feed: [...st.feed, ...seeded.filter((x) => !st.feed.some((f) => f.sessionId === x.sessionId && f.index === x.index))] }));
     }).catch(() => undefined);
     es = new EventSource('/api/stream');
+    let opened = false;
     es.onopen = () => {
       set({ connected: true });
+      // A reconnect may have missed events; the first open is already covered by the initial loads above.
+      if (opened) void get().resync();
+      opened = true;
       void get().refreshControl();
       void get().refreshGuard();
     };
     es.onerror = () => set({ connected: false });
     es.onmessage = (m) => applyEvent(JSON.parse(m.data) as ServerEvent, set, get);
+  },
+
+  async resync() {
+    const sessions = await api.sessions().catch(() => null);
+    if (sessions) set({ sessions });
+    const id = get().selectedId;
+    if (!id) return;
+    const snap = await api.session(id).catch(() => null);
+    if (!snap || get().selectedId !== id) return;
+    const s = snap.session;
+    set((st) => ({
+      items: snap.items,
+      prompts: snap.prompts,
+      meta: st.meta && {
+        ...st.meta, title: s.title, models: s.models, startMs: s.startMs, endMs: s.endMs, compactions: s.compactions,
+      },
+    }));
   },
 
   async select(id, index = null) {

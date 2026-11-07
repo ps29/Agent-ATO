@@ -204,6 +204,11 @@ ${o.code}`.toLowerCase().includes(needle)) continue;
     return { items, next: items.length ? cursor : null };
   }
 
+  counts(): Record<string, number> {
+    const n = (t: string): number => (this.db.prepare('SELECT COUNT(*) c FROM ' + t).get() as { c: number }).c;
+    return { sessions: n('sessions'), interactions: n('interactions'), hookEvents: n('hook_events') };
+  }
+
   /** Time of the newest hook event, or null if none has arrived. */
   lastHookMs(): number | null {
     const r = this.db.prepare('SELECT MAX(ts) AS t FROM hook_events').get() as { t: number | null };

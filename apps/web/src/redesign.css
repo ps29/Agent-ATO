@@ -68,7 +68,7 @@
 [data-design='updated'] .popover,
 [data-design='updated'] .tl,
 [data-design='updated'] .opcard {
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)), rgba(10, 16, 36, 0.58);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)), rgba(10, 16, 36, 0.78);
   border: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(28px) saturate(1.7);
   -webkit-backdrop-filter: blur(28px) saturate(1.7);
@@ -114,7 +114,12 @@
 }
 [data-design='updated'] input[type='text'],
 [data-design='updated'] input[type='search'],
-[data-design='updated'] select { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 999px; padding: 4px 12px; }
+/* Same height and press feel as the pill buttons beside it; dark option list so the text stays readable. */
+[data-design='updated'] select {
+  background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 999px;
+  min-height: 36px; padding: 0 14px; cursor: pointer; color-scheme: dark;
+}
+[data-design='updated'] select option { background: #141a33; color: #f2f5fa; }
 [data-design='updated'] .seg { border-radius: 999px; background: rgba(255, 255, 255, 0.07); }
 [data-design='updated'] .seg button { min-height: 32px; }
 

@@ -96,3 +96,42 @@ td.clip { max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-spa
 /* Design switch (Original / Updated) */
 .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
 .seg button { border: 0; border-radius: 0; }
+
+/* Header: navigation on the first row, controls grouped below, stop controls set apart. */
+.hdr-controls { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.ctl-group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.ctl-group + .ctl-group { padding-left: 14px; border-left: 1px solid var(--border); }
+.danger-group { margin-left: auto; }
+button.danger, [data-design] button.danger { border-color: var(--err); color: var(--err); }
+button.danger:hover, [data-design] button.danger:hover { background: color-mix(in srgb, var(--err) 18%, transparent); border-color: var(--err); }
+button.danger:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Session header: labelled facts instead of one run-on line. */
+.metaline { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 2px; }
+.metaitem { color: var(--text); min-width: 0; overflow-wrap: anywhere; }
+.metalabel { color: var(--muted); font-size: 0.786rem; text-transform: uppercase; letter-spacing: 0.04em; margin-right: 4px; }
+
+/* Chart legend: grouped and labelled. Colours are unchanged. */
+.legend-groups { gap: 6px 22px; }
+.legendgroup { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; }
+.legendhead { color: var(--muted); font-size: 0.786rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.popover select:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* Display popover: open rightward from its button; on narrow screens span the header so it is never clipped. */
+.header { position: relative; }
+.popover { left: 0; right: auto; }
+@media (max-width: 760px) {
+  .popwrap { position: static; }
+  .popover { left: 8px; right: 8px; top: calc(100% + 6px); width: auto; max-width: none; max-height: 80vh; overflow: auto; }
+}
+
+/* Interactions-per-day bars: each column is a full-height button so thin bars are easy to click. */
+.bars button.barcol, [data-design] .bars button.barcol, [data-design] .bars button.barcol:hover, [data-design] .bars button.barcol:active {
+  flex: 1; min-width: 2px; min-height: 0; height: 100%; padding: 0; margin: 0; border: 0; border-radius: 0; background: none;
+  display: flex; align-items: flex-end; transform: none; box-shadow: none;
+}
+.bars .barfill { display: block; width: 100%; min-height: 1px; background: var(--accent); border-radius: 2px 2px 0 0; }
+.bars button.barcol:hover .barfill { filter: brightness(1.25); }
+.bars button.barcol.dimmed .barfill { opacity: 0.35; }
+.bars button.barcol.picked { outline: 2px solid var(--text); outline-offset: 1px; }
+.barreadout { margin-top: 6px; min-height: 1.5em; }

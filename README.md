@@ -19,6 +19,7 @@ This project is based on the paper [*Agent ATO: Visualizing Agent Interaction Ti
 - **Guard** tab and a **Halt agent** button: deny or ask before risky actions, using rules you write (needs the hooks).
 - **Reports**: generate a draft post-incident review, RCA, change log or RFC from any session.
 - **Display** settings: Solarized, dark, light and high-contrast themes; Atkinson Hyperlegible, OpenDyslexic and JetBrains Mono fonts; text size, spacing and bold.
+- **Transcript archive**: a compressed, lossless copy of every transcript in `~/.agent-ato/archive`, so the full record survives Claude Code deleting old sessions. See [where data is stored](docs/storage.md).
 - **Pause, restart and stop** the server from the header.
 - **Stats**, **MEMORY.md viewer**, and **export** to JSON, CSV or Markdown.
 - A **SQLite log** that keeps history after Claude Code deletes old transcripts.

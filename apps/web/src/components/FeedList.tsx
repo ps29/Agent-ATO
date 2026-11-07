@@ -2,6 +2,7 @@ import type { Interaction } from '@agent-ato/shared';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../api';
 import { useStore, type FeedRow } from '../store';
+import { sessionName } from '../sessionName';
 import { fmt } from '../timeline/math';
 
 interface Props {
@@ -10,6 +11,16 @@ interface Props {
   compact?: boolean;
   onOpen: (sessionId: string, index: number) => void;
 }
+
+/** Commands often start with setup (export, cd, set). Lead with the action that follows; the full text stays in a tooltip. */
+const displayLabel = (label: string): string => {
+  const parts = label.split(' && ');
+  let i = 0;
+  while (i < parts.length - 1 && /^(export|set|cd|unset|source)(\s|$)/.test(parts[i]!)) i++;
+  return i ? parts.slice(i).join(' && ') : label;
+};
+
+const TAG_TITLE: Record<string, string> = { D: 'Discovery', R: 'Reading', W: 'Writing', E: 'Execution' };
 
 const STATUS_LABEL: Record<FeedRow['status'], string> = { running: 'running', ok: 'ok', error: 'error' };
 
@@ -85,7 +96,7 @@ export function FeedList({ sessionId, compact, onOpen }: Props) {
     if (el && !paused && el.scrollTop < 40) el.scrollTop = 0;
   }, [rows, paused]);
 
-  const names = useMemo(() => new Map(sessions.map((s) => [s.id, s.title ?? s.id.slice(0, 8)])), [sessions]);
+  const names = useMemo(() => new Map(sessions.map((s) => [s.id, sessionName(s)])), [sessions]);
   const running = rows.filter((r) => r.status === 'running').length;
 
   return (
@@ -113,9 +124,9 @@ export function FeedList({ sessionId, compact, onOpen }: Props) {
               </span>
             )}
             <span className="feedtags">
-              {[...r.tags].map((t) => (<span key={t} className="tagchip" style={{ background: `var(--tag-${t.toLowerCase()})` }}>{t}</span>))}
+              {[...r.tags].map((t) => (<span key={t} className="tagchip" title={TAG_TITLE[t] ?? t} aria-label={TAG_TITLE[t] ?? t} style={{ background: `var(--tag-${t.toLowerCase()})` }}>{t}</span>))}
             </span>
-            <span className="feedlabel">{r.label}</span>
+            <span className="feedlabel" title={r.label}>{displayLabel(r.label)}</span>
             <span className={`badge ${r.status === 'error' ? 'err' : ''}`}>{r.status === 'running' ? <><span className="dot live" /> {STATUS_LABEL[r.status]}</> : STATUS_LABEL[r.status]}</span>
             {r.outputTokens > 0 && <span className="muted">{fmt(r.outputTokens)} out</span>}
             {r.narration && !compact && !open.has(`${r.sessionId}:${r.index}`) && <div className="feednarr muted">{r.narration}</div>}

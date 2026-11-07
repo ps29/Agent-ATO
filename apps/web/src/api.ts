@@ -68,7 +68,7 @@ export interface GuardState {
 export interface AuditRow {
   id: number;
   ts: number;
-  kind: 'call' | 'result' | 'guard' | 'control';
+  kind: 'call' | 'result' | 'prompt' | 'message' | 'guard' | 'control';
   session_id: string | null;
   tool_use_id: string | null;
   tool: string | null;
@@ -85,6 +85,14 @@ export interface VerifyResult {
   checked: number;
   brokenAt: number | null;
   head: string;
+}
+
+export interface StorageInfo {
+  database: { path: string; bytes: number };
+  archive: { path: string; files: number; bytes: number };
+  transcripts: { path: string };
+  counts: Record<string, number>;
+  audit: { entries: number; head: string } | null;
 }
 
 export interface HookRow {
@@ -167,6 +175,7 @@ export const api = {
     ),
   controlState: () => get<ControlState>('/api/control'),
   control: (action: 'pause' | 'resume' | 'stop' | 'restart') => post<unknown>(`/api/control/${action}`),
+  storage: () => get<StorageInfo>('/api/storage'),
   stats: () => get<Stats>('/api/stats'),
   hooks: (id: string) => get<HookRow[]>(`/api/hooks?${q({ id })}`),
   memory: (project: string) => get<{ files: { name: string; content: string }[] }>(`/api/memory?${q({ project })}`),

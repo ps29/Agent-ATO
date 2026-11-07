@@ -3,7 +3,7 @@ import { api } from '../api';
 import { useStore } from '../store';
 
 /** Pause/resume ingestion, restart and stop the server. */
-export function ControlBar() {
+export function ControlBar({ part }: { part: 'ingest' | 'danger' }) {
   const control = useStore((s) => s.control);
   const connected = useStore((s) => s.connected);
   const refresh = useStore((s) => s.refreshControl);
@@ -27,18 +27,22 @@ export function ControlBar() {
 
   if (!connected && !control) return null;
   if (!connected)
-    return (
+    return part === 'danger' ? null : (
       <span className="muted">
         Server stopped. Start it again with <code>npm start</code>.
       </span>
     );
   if (!control?.available) return null;
-  return (
-    <span className="tabs">
+  if (part === 'ingest')
+    return (
       <button disabled={busy} onClick={() => run(control.paused ? 'resume' : 'pause')}>
         {control.paused ? 'Resume ingest' : 'Pause ingest'}
       </button>
+    );
+  return (
+    <>
       <button
+        className="danger"
         disabled={busy || !control.supervised}
         title={
           control.supervised ? 'Restart the server process' : 'Run with npm start to enable restart'
@@ -48,6 +52,7 @@ export function ControlBar() {
         Restart
       </button>
       <button
+        className="danger"
         disabled={busy}
         title="Stop the server. Restart it from a terminal with npm start."
         onClick={() =>
@@ -56,6 +61,6 @@ export function ControlBar() {
       >
         Stop
       </button>
-    </span>
+    </>
   );
 }

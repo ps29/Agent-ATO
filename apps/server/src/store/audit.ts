@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import type { DatabaseSync, StatementSync } from 'node:sqlite';
 import { transaction } from './db.js';
 
-export type AuditKind = 'call' | 'result' | 'guard' | 'control';
+export type AuditKind = 'call' | 'result' | 'prompt' | 'message' | 'guard' | 'control';
 
 export interface AuditEntry {
   ts: number;

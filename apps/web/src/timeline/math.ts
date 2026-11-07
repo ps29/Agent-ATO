@@ -56,3 +56,15 @@ export function mergeItems(list: Interaction[], changed: Interaction[]): Interac
   for (const it of changed) next[it.index] = it;
   return next;
 }
+
+/** Largest token totals for scaling the chart. Uses a loop, not Math.max(...spread), which throws on very large arrays. */
+export function chartMaxes(items: readonly Interaction[]): { maxTok: number; maxCtx: number } {
+  let maxTok = 1;
+  let maxCtx = 1;
+  for (const it of items) {
+    const tok = it.outputTokens + it.toolResultTokensEst;
+    if (tok > maxTok) maxTok = tok;
+    if (it.contextTokens > maxCtx) maxCtx = it.contextTokens;
+  }
+  return { maxTok, maxCtx };
+}

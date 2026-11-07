@@ -2,6 +2,7 @@ import { buildReport, CRUD_OPS, REPORT_KINDS, RISK_ORDER, type CrudOp, type Risk
 import fastifyStatic from '@fastify/static';
 import Fastify, { type FastifyInstance, type FastifyReply, type FastifyRequest } from 'fastify';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { z } from 'zod';
 import type { Config } from './config.js';
@@ -112,6 +113,44 @@ export function buildApp(deps: AppDeps): FastifyInstance {
       before: req.query.before ? Number(req.query.before) : undefined,
     }),
   );
+
+  // Where the data lives and how much there is.
+  let storageCache: { at: number; value: unknown } | null = null;
+  app.get('/api/storage', async () => {
+    if (storageCache && now() - storageCache.at < 30_000) return storageCache.value;
+    const size = (p: string): number => {
+      try {
+        return statSync(p).size;
+      } catch {
+        return 0;
+      }
+    };
+    const walk = (dir: string): { files: number; bytes: number } => {
+      let files = 0;
+      let bytes = 0;
+      if (!existsSync(dir)) return { files, bytes };
+      for (const rel of readdirSync(dir, { recursive: true }) as string[]) {
+        const s = size(join(dir, rel));
+        if (rel.endsWith('.gz')) {
+          files++;
+          bytes += s;
+        }
+      }
+      return { files, bytes };
+    };
+    const db = join(config.dataDir, 'agent-ato.db');
+    const home = homedir();
+    const tilde = (p: string): string => (p.startsWith(home) ? '~' + p.slice(home.length).split('\\').join('/') : p);
+    const value = {
+      database: { path: tilde(db), bytes: size(db) + size(db + '-wal') },
+      archive: { path: tilde(join(config.dataDir, 'archive')), ...walk(join(config.dataDir, 'archive')) },
+      transcripts: { path: tilde(projectsRoot) },
+      counts: repo.counts(),
+      audit: audit ? { entries: audit.count(), head: audit.headHash } : null,
+    };
+    storageCache = { at: now(), value };
+    return value;
+  });
 
   app.get('/api/stats', async () => repo.stats());
 

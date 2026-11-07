@@ -1,6 +1,6 @@
 import type { Interaction, Prompt } from '@agent-ato/shared';
 import { describe, expect, it } from 'vitest';
-import { contextGrowth, findRepeats, fmt, mergeItems } from '../src/timeline/math';
+import { chartMaxes, contextGrowth, findRepeats, fmt, mergeItems } from '../src/timeline/math';
 
 const it_ = (label: string, o: Partial<Interaction> = {}): Interaction =>
   ({ label, index: 0, outputTokens: 0, toolResultTokensEst: 0, contextTokens: 0, tools: [], tags: [], ...o }) as Interaction;
@@ -28,5 +28,15 @@ describe('timeline math', () => {
     expect(merged.map((i) => i.label)).toEqual(['c', 'b']);
     expect(fmt(1500)).toBe('1.5k');
     expect(fmt(2_500_000)).toBe('2.5M');
+  });
+});
+
+describe('chartMaxes', () => {
+  it('returns floor of 1 for empty or zero data', () => {
+    expect(chartMaxes([])).toEqual({ maxTok: 1, maxCtx: 1 });
+  });
+  it('handles arrays too large for Math.max(...spread)', () => {
+    const items = Array.from({ length: 300_000 }, (_, i) => it_('a', { outputTokens: i, toolResultTokensEst: 1, contextTokens: i * 2 }));
+    expect(chartMaxes(items)).toEqual({ maxTok: 299_999 + 1, maxCtx: 599_998 });
   });
 });
