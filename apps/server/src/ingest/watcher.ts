@@ -6,6 +6,7 @@ import { StringDecoder } from 'node:string_decoder';
 import type { Archive } from '../store/archive.js';
 import type { Audit, AuditEntry } from '../store/audit.js';
 import type { Repo } from '../store/repo.js';
+import { instruments, measure } from '../telemetry.js';
 import type { EventHub } from './hub.js';
 
 interface Stream {
@@ -104,7 +105,10 @@ export class Watcher {
           archive.catchUp(path, rel);
           await new Promise((r) => setImmediate(r)); // let HTTP and file events run between files
         })
-        .catch((e) => console.error('archive failed', path, e));
+        .catch((e) => {
+          instruments.archiveErrors.add(1);
+          console.error('archive failed', path, e);
+        });
     }
     return this.archiveQueue;
   }
@@ -125,7 +129,12 @@ export class Watcher {
       path,
       setTimeout(() => {
         this.timers.delete(path);
-        this.queue = this.queue.then(() => this.ingest(path)).catch((e) => console.error('ingest failed', path, e));
+        this.queue = this.queue
+          .then(() => measure('transcript.ingest', instruments.ingestDuration, {}, () => this.ingest(path)))
+          .catch((e) => {
+            instruments.ingestErrors.add(1);
+            console.error('ingest failed', path, e);
+          });
       }, this.debounceMs),
     );
   }

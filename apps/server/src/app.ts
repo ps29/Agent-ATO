@@ -13,6 +13,7 @@ import { allowedHosts, isContained, tokenMatches } from './security.js';
 import { decide, validRegex, type GuardStore } from './guard.js';
 import type { Audit } from './store/audit.js';
 import type { Repo } from './store/repo.js';
+import { hookEventAttribute, instruments, measure } from './telemetry.js';
 
 const ACTIVE_MS = 60_000;
 
@@ -60,6 +61,13 @@ export function buildApp(deps: AppDeps): FastifyInstance {
     if (!hosts.has(String(req.headers.host ?? '').toLowerCase())) {
       return reply.code(403).send({ error: 'forbidden host' });
     }
+  });
+
+  // Route template, not the raw URL, so session IDs in paths do not become metric labels.
+  app.addHook('onResponse', async (req, reply) => {
+    instruments.httpDuration.record(reply.elapsedTime, {
+      method: req.method, route: req.routeOptions.url ?? 'unmatched', status: reply.statusCode,
+    });
   });
 
   // State-changing UI calls must carry a custom header (forces a CORS preflight that is never approved)
@@ -335,6 +343,7 @@ export function buildApp(deps: AppDeps): FastifyInstance {
     const parsed = hookBody.safeParse(req.body);
     if (!parsed.success) return reply.code(400).send({ error: 'bad payload' });
     const b = parsed.data;
+    instruments.hookEvents.add(1, { event: hookEventAttribute(b.hook_event_name) });
     const ts = now();
     repo.addHook({
       sessionId: b.session_id ?? null, event: b.hook_event_name, toolName: b.tool_name ?? null,
@@ -351,7 +360,10 @@ export function buildApp(deps: AppDeps): FastifyInstance {
     if (guard && b.hook_event_name === 'PreToolUse' && b.tool_name) {
       const input = raw.tool_input && typeof raw.tool_input === 'object' ? (raw.tool_input as Record<string, unknown>) : {};
       const cfg = guard.config();
-      const d = decide(cfg, guard.rules(), b.tool_name, input);
+      const d = measure('guard.decide', undefined, { tool: b.tool_name }, () => decide(cfg, guard.rules(), b.tool_name!, input));
+      instruments.guardDecisions.add(1, {
+        decision: d.decision, risk: d.risk, mode: cfg.mode, would_have: Boolean(d.wouldHave),
+      });
       if (d.decision !== 'allow' || d.wouldHave) {
         audit?.append({
           ts, kind: 'guard', sessionId: b.session_id ?? null, toolUseId: b.tool_use_id ?? null, tool: b.tool_name, risk: d.risk,

@@ -15,6 +15,7 @@ import { Archive } from './store/archive.js';
 import { Audit } from './store/audit.js';
 import { openDb } from './store/db.js';
 import { Repo } from './store/repo.js';
+import { shutdownTelemetry, startTelemetry } from './telemetry.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const clientPath = resolve(here, '..', 'hook-client.mjs');
@@ -22,6 +23,7 @@ const RESTART_CODE = 75;
 const settingsPath = (root: string): string => join(root, 'settings.json');
 
 async function start(): Promise<void> {
+  if (startTelemetry()) console.log('OpenTelemetry export on (OTEL_EXPORTER_OTLP_* set).');
   const config = loadConfig();
   config.webDir ??= resolve(here, '..', '..', 'web', 'dist');
   const db = openDb(join(config.dataDir, 'agent-ato.db'));
@@ -60,6 +62,7 @@ async function start(): Promise<void> {
       await watcher.stop();
       await app.close();
       db.close();
+      await shutdownTelemetry(); // flush buffered spans and metrics before exiting
       process.exit(code);
     })();
   };

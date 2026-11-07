@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- OpenTelemetry export of server traces and metrics over OTLP/HTTP, enabled by `OTEL_EXPORTER_OTLP_ENDPOINT`. Off by default; no prompts, code or paths are exported. See [telemetry](docs/telemetry.md).
 - Operations tab (CRUD view) with syntax-highlighted code boxes.
 - Risk assessment for tool calls, shown in Operations, Reasoning and the audit log.
 - Reasoning tab; Audit tab with a hash-chained, verifiable log and `audit-backfill`.
