@@ -30,13 +30,13 @@ afterEach(() => rmSync(tmp, { recursive: true, force: true }));
 function setup() {
   const repo = new Repo(openDb(':memory:'));
   const hub = new EventHub();
-  const config: Config = { claudeRoot: tmp, dataDir: tmp, host: '127.0.0.1', port: 4317, webDir: null };
+  const config: Config = { claudeRoot: tmp, dataDir: tmp, host: '127.0.0.1', port: 4327, webDir: null };
   const app = buildApp({ config, repo, hub, token: 'secret' });
   const events: ServerEvent[] = [];
   hub.subscribe((e) => events.push(e));
   return { repo, hub, app, events, watcher: new Watcher(projects, repo, hub, 0) };
 }
-const H = { host: 'localhost:4317' };
+const H = { host: 'localhost:4327' };
 
 describe('watcher + store', () => {
   it('ingests appended bytes incrementally and joins late tool results', async () => {
@@ -136,7 +136,7 @@ describe('process controls', () => {
     const calls: string[] = [];
     let paused = false;
     const app = buildApp({
-      config: { claudeRoot: tmp, dataDir: tmp, host: '127.0.0.1', port: 4317, webDir: null },
+      config: { claudeRoot: tmp, dataDir: tmp, host: '127.0.0.1', port: 4327, webDir: null },
       repo: s.repo,
       hub: s.hub,
       token: 'secret',

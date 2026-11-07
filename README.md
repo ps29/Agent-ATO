@@ -37,10 +37,10 @@ Requires Node.js 22.13 or newer.
 ```bash
 npm ci
 npm run build
-npm start          # http://127.0.0.1:4317
+npm start          # http://127.0.0.1:4327
 ```
 
-Development with hot reload (web on :5173, API on :4317):
+Development with hot reload (web on :5173, API on :4327):
 
 ```bash
 npm run dev
@@ -64,7 +64,7 @@ See [docs/hooks.md](docs/hooks.md). `node apps/server/dist/cli.js doctor` checks
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `AGENT_ATO_PORT` | `4317` | HTTP port |
+| `AGENT_ATO_PORT` | `4327` | HTTP port |
 | `CLAUDE_ROOT` | `~/.claude` | Claude Code data folder (read only) |
 | `AGENT_ATO_DATA` | `~/.agent-ato` | Database and ingest token |
 | `AGENT_ATO_WEB` | built `apps/web/dist` | Folder of static web files |

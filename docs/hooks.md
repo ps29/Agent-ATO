@@ -19,7 +19,7 @@ Every command it adds contains the marker `agent-ato-managed`. `uninstall-hooks`
 
 ## What the hook client does
 
-`apps/server/hook-client.mjs` reads the hook payload from stdin and POSTs it to `http://127.0.0.1:4317/ingest/hook` with the token from `~/.agent-ato/token`.
+`apps/server/hook-client.mjs` reads the hook payload from stdin and POSTs it to `http://127.0.0.1:4327/ingest/hook` with the token from `~/.agent-ato/token`.
 
 - It always exits 0. The only thing it ever prints is a `PreToolUse` permission decision (`deny` or `ask`) when Guard asks to stop a call; see [audit-and-guard.md](audit-and-guard.md).
 - It waits up to 3 s for a `PreToolUse` decision and 400 ms for other events, and lets the call through if the server does not answer.

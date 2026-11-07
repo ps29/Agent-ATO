@@ -17,7 +17,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     claudeRoot: env.CLAUDE_ROOT ?? join(homedir(), '.claude'),
     dataDir: env.AGENT_ATO_DATA ?? join(homedir(), '.agent-ato'),
     host: '127.0.0.1',
-    port: Number(env.AGENT_ATO_PORT ?? 4317),
+    port: Number(env.AGENT_ATO_PORT ?? 4327),
     webDir: env.AGENT_ATO_WEB ?? null,
   };
 }

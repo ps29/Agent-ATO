@@ -12,7 +12,7 @@ setTimeout(done, 4000).unref();
 
 try {
   const dataDir = process.env.AGENT_ATO_DATA ?? join(homedir(), '.agent-ato');
-  const port = process.env.AGENT_ATO_PORT ?? '4317';
+  const port = process.env.AGENT_ATO_PORT ?? '4327';
   const token = readFileSync(join(dataDir, 'token'), 'utf8').trim();
   let body = '';
   process.stdin.setEncoding('utf8');
