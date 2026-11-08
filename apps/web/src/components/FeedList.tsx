@@ -115,8 +115,8 @@ export function FeedList({ sessionId, compact, onOpen }: Props) {
       </div>
       <div ref={box} className="feedlist" style={{ maxHeight: compact ? 260 : 'calc(100vh - 190px)' }}>
         {rows.map((r) => (
-          <div key={r.key} className={`feedrow ${r.status}`} onClick={() => toggle(`${r.sessionId}:${r.index}`)}>
-            <span className="muted">{open.has(`${r.sessionId}:${r.index}`) ? '▾' : '▸'}</span>
+          <div key={r.key} className={`feedrow ${r.status}`} onClick={() => !r.prompt && toggle(`${r.sessionId}:${r.index}`)}>
+            <span className="muted">{r.prompt ? '✎' : open.has(`${r.sessionId}:${r.index}`) ? '▾' : '▸'}</span>
             <span className="muted feedtime">{r.ts ? new Date(r.ts).toLocaleTimeString() : ''}</span>
             {!sessionId && (
               <span className="feedsess" style={{ background: `hsl(${hue(r.sessionId)} 55% 45%)` }} title={r.sessionId}>
@@ -127,7 +127,7 @@ export function FeedList({ sessionId, compact, onOpen }: Props) {
               {[...r.tags].map((t) => (<span key={t} className="tagchip" title={TAG_TITLE[t] ?? t} aria-label={TAG_TITLE[t] ?? t} style={{ background: `var(--tag-${t.toLowerCase()})` }}>{t}</span>))}
             </span>
             <span className="feedlabel" title={r.label}>{displayLabel(r.label)}</span>
-            <span className={`badge ${r.status === 'error' ? 'err' : ''}`}>{r.status === 'running' ? <><span className="dot live" /> {STATUS_LABEL[r.status]}</> : STATUS_LABEL[r.status]}</span>
+            <span className={`badge ${r.status === 'error' ? 'err' : ''}`}>{r.prompt ? 'prompt' : r.status === 'running' ? <><span className="dot live" /> {STATUS_LABEL[r.status]}</> : STATUS_LABEL[r.status]}</span>
             {r.outputTokens > 0 && <span className="muted">{fmt(r.outputTokens)} out</span>}
             {r.narration && !compact && !open.has(`${r.sessionId}:${r.index}`) && <div className="feednarr muted">{r.narration}</div>}
             {open.has(`${r.sessionId}:${r.index}`) && <Expanded row={r} onOpen={() => onOpen(r.sessionId, r.index)} />}

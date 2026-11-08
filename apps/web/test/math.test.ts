@@ -1,6 +1,6 @@
 import type { Interaction, Prompt } from '@agent-ato/shared';
 import { describe, expect, it } from 'vitest';
-import { chartMaxes, contextGrowth, findRepeats, fmt, mergeItems } from '../src/timeline/math';
+import { chartMaxes, contextGrowth, findRepeats, fmt, hasGap, mergeItems } from '../src/timeline/math';
 
 const it_ = (label: string, o: Partial<Interaction> = {}): Interaction =>
   ({ label, index: 0, outputTokens: 0, toolResultTokensEst: 0, contextTokens: 0, tools: [], tags: [], ...o }) as Interaction;
@@ -21,6 +21,15 @@ describe('timeline math', () => {
     const prompts = [{ index: 0, firstInteraction: 1, ts: null, text: 'x'.repeat(40) }] as Prompt[];
     expect(contextGrowth(items, 1, prompts)).toEqual({ delta: 600, toolResults: 300, assistantOutput: 100, userText: 10, other: 190 });
     expect(contextGrowth(items, 0, prompts)).toBeNull();
+  });
+
+  it('detects a gap when changed items skip past the end of the list', () => {
+    const list = [it_('a', { index: 0 }), it_('b', { index: 1 })];
+    expect(hasGap(list, [it_('c', { index: 2 })])).toBe(false);
+    expect(hasGap(list, [it_('c', { index: 1 })])).toBe(false);
+    expect(hasGap(list, [it_('c', { index: 4 })])).toBe(true);
+    expect(hasGap(list, [it_('c', { index: 3 }), it_('d', { index: 2 })])).toBe(false);
+    expect(hasGap([], [it_('c', { index: 1 })])).toBe(true);
   });
 
   it('merges by index and formats numbers', () => {

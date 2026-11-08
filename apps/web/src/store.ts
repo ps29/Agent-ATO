@@ -2,7 +2,7 @@ import type { Interaction, Prompt, SessionMeta } from '@agent-ato/shared';
 import { create } from 'zustand';
 import { evaluate, DEFAULT_ALERTS, type AlertConfig, type AlertHit } from './alerts';
 import { api, type ControlState, type GuardState, type HookRow, type ServerEvent, type SessionRow } from './api';
-import { mergeItems } from './timeline/math';
+import { hasGap, mergeItems } from './timeline/math';
 
 export type View = 'live' | 'feed' | 'ops' | 'reasoning' | 'audit' | 'guard' | 'log' | 'stats' | 'memory';
 
@@ -16,9 +16,26 @@ export interface FeedRow {
   status: 'running' | 'ok' | 'error';
   narration: string;
   outputTokens: number;
+  /** A user prompt rather than an interaction. Prompt rows have no details to expand. */
+  prompt?: boolean;
 }
 
 const FEED_MAX = 500;
+/** When this page loaded. The live feed only adds prompts logged after this. */
+const FEED_SINCE = Date.now();
+
+const toPromptRow = (sessionId: string, p: Prompt): FeedRow => ({
+  key: `${sessionId}:prompt:${p.index}`,
+  sessionId,
+  index: p.index,
+  ts: p.ts ?? Date.now(),
+  tags: '',
+  label: `You: ${p.text.trim().split('\n')[0]!.slice(0, 200)}`,
+  status: 'ok',
+  narration: '',
+  outputTokens: 0,
+  prompt: true,
+});
 
 const toFeedRow = (it: Interaction): FeedRow => ({
   key: `${it.sessionId}:${it.id}`,
@@ -239,13 +256,21 @@ function applyEvent(ev: ServerEvent, set: Set, get: () => State): void {
     const byKey = new Map(incoming.map((r) => [r.key, r]));
     const used = new Set<string>();
     const updated = s.feed.map((f) => {
+      if (f.prompt) return f;
       const r = byKey.get(f.key) ?? incoming.find((x) => x.sessionId === f.sessionId && x.index === f.index);
       if (!r) return f;
       used.add(r.key);
       return r;
     });
     const fresh = incoming.filter((r) => !used.has(r.key)).reverse();
-    return { feed: [...fresh, ...updated].slice(0, FEED_MAX) };
+    // Prompts arrive as the whole session list. Add only prompts logged since this page loaded, not old history.
+    const seen = new Set(s.feed.map((f) => f.key));
+    const newPrompts = (ev.prompts ?? [])
+      .filter((p) => (p.ts ?? 0) >= FEED_SINCE)
+      .map((p) => toPromptRow(ev.sessionId, p))
+      .filter((r) => !seen.has(r.key));
+    const added = [...fresh, ...newPrompts].sort((a, b) => b.ts - a.ts);
+    return { feed: [...added, ...updated].slice(0, FEED_MAX) };
   });
   for (const it of ev.items) {
     for (const hit of evaluate(it, get().alerts)) {
@@ -258,6 +283,11 @@ function applyEvent(ev: ServerEvent, set: Set, get: () => State): void {
     }
   }
   if (ev.sessionId !== get().selectedId) return;
+  // Items past the end of the list mean earlier ones were missed. Reload the session instead of leaving empty slots.
+  if (hasGap(get().items, ev.items)) {
+    void get().resync();
+    return;
+  }
   set((s) => ({
     items: mergeItems(s.items, ev.items),
     prompts: ev.prompts ?? s.prompts,
