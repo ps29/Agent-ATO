@@ -1,6 +1,5 @@
 import { createHash } from 'node:crypto';
 import type { DatabaseSync, StatementSync } from 'node:sqlite';
-import { instruments } from '../telemetry.js';
 import { transaction } from './db.js';
 
 export type AuditKind = 'call' | 'result' | 'prompt' | 'message' | 'guard' | 'control';
@@ -79,7 +78,6 @@ export class Audit {
     );
     if (Number(r.changes) === 0) return false;
     this.head = hash;
-    instruments.auditRows.add(1, { kind: e.kind });
     return true;
   }
 
