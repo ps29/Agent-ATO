@@ -2,12 +2,14 @@
 
 ## Audit log
 
-Every tool call the agent makes is written to the `audit_log` table in `~/.agent-ato/agent-ato.db`:
+Everything the agent does is written to the `audit_log` table in `~/.agent-ato/agent-ato.db`:
 
 | kind | written when |
 |---|---|
 | `call` | a tool call is first seen in a transcript |
 | `result` | its result arrives (status `ok` or `error`) |
+| `prompt` | a user prompt is first seen |
+| `message` | the agent's commentary for an action, once that action has finished |
 | `guard` | Guard denied, asked about, or (in monitor mode) would have acted on a call |
 | `control` | Guard settings or rules were changed |
 

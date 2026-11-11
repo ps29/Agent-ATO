@@ -10,7 +10,7 @@ export function DesignToggle() {
   const design = useSettings((s) => s.design);
   const patch = useSettings((s) => s.patch);
   return (
-    <div className="seg" role="group" aria-label="Design">
+    <div className="seg" role="group" aria-label="Design" title="Switch between the original and updated look">
       {OPTIONS.map((o) => (
         <button key={o.id} className={design === o.id ? 'active' : ''} aria-pressed={design === o.id} onClick={() => patch({ design: o.id })}>
           {o.label}

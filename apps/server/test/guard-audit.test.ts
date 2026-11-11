@@ -17,7 +17,7 @@ beforeEach(() => {
 });
 afterEach(() => rmSync(tmp, { recursive: true, force: true }));
 
-const H = { host: 'localhost:4317' };
+const H = { host: 'localhost:4327' };
 const UI = { ...H, 'x-agent-ato-ui': '1', 'content-type': 'application/json' };
 
 function setup() {
@@ -26,7 +26,7 @@ function setup() {
   const hub = new EventHub();
   const audit = new Audit(db);
   const guard = new GuardStore(db);
-  const config: Config = { claudeRoot: tmp, dataDir: tmp, host: '127.0.0.1', port: 4317, webDir: null };
+  const config: Config = { claudeRoot: tmp, dataDir: tmp, host: '127.0.0.1', port: 4327, webDir: null };
   const app = buildApp({ config, repo, hub, token: 'secret', audit, guard });
   return { db, repo, hub, audit, guard, app };
 }

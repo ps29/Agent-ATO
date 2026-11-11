@@ -14,7 +14,7 @@ npm run build -w @agent-ato/shared
 | --- | --- |
 | `npm run dev` | Server (tsx watch) and Vite dev server |
 | `npm run build` | Builds shared, web, then server |
-| `npm start` | Runs the built server on http://127.0.0.1:4317 |
+| `npm start` | Runs the built server on http://127.0.0.1:4327 |
 | `npm test` | Vitest in every workspace |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | `tsc --noEmit` in every workspace |

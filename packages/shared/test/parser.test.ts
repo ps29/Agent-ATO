@@ -44,3 +44,16 @@ describe('TranscriptParser', () => {
     expect(p.meta.title).toBe('T');
   });
 });
+
+describe('compaction markers', () => {
+  it('records one marker when a boundary record is followed by its summary', () => {
+    const p = new TranscriptParser('s');
+    const lines = [
+      { type: 'system', subtype: 'compact_boundary', content: 'Conversation compacted', timestamp: '2026-01-01T00:00:00Z' },
+      { type: 'user', isCompactSummary: true, message: { role: 'user', content: 'This session is being continued...' }, timestamp: '2026-01-01T00:00:01Z' },
+    ];
+    p.feed(lines.map((l) => JSON.stringify(l) + '\n').join(''));
+    expect(p.meta.compactions).toEqual([0]);
+    expect(p.prompts).toHaveLength(0);
+  });
+});

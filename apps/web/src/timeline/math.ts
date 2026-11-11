@@ -49,10 +49,32 @@ export function contextGrowth(items: Interaction[], i: number, prompts: Prompt[]
   return { delta, toolResults, assistantOutput, userText, other: delta - toolResults - assistantOutput - userText };
 }
 
+/** True when applying `changed` to `list` would leave empty slots, i.e. the list is missing earlier items. */
+export function hasGap(list: readonly Interaction[], changed: readonly Interaction[]): boolean {
+  let len = list.length;
+  for (const it of [...changed].sort((a, b) => a.index - b.index)) {
+    if (it.index > len) return true;
+    len = Math.max(len, it.index + 1);
+  }
+  return false;
+}
+
 /** Merge changed interactions into a list by index, keeping order. */
 export function mergeItems(list: Interaction[], changed: Interaction[]): Interaction[] {
   if (!changed.length) return list;
   const next = list.slice();
   for (const it of changed) next[it.index] = it;
   return next;
+}
+
+/** Largest token totals for scaling the chart. Uses a loop, not Math.max(...spread), which throws on very large arrays. */
+export function chartMaxes(items: readonly Interaction[]): { maxTok: number; maxCtx: number } {
+  let maxTok = 1;
+  let maxCtx = 1;
+  for (const it of items) {
+    const tok = it.outputTokens + it.toolResultTokensEst;
+    if (tok > maxTok) maxTok = tok;
+    if (it.contextTokens > maxCtx) maxCtx = it.contextTokens;
+  }
+  return { maxTok, maxCtx };
 }

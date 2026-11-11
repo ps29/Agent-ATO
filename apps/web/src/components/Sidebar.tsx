@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { SessionRow } from '../api';
 import { useStore } from '../store';
+import { sessionName } from '../sessionName';
 import { fmt } from '../timeline/math';
 
 const ago = (ms: number): string => {
@@ -15,13 +16,13 @@ function Row({ s, child }: { s: SessionRow; child?: boolean }) {
   const selectedId = useStore((st) => st.selectedId);
   const select = useStore((st) => st.select);
   const setFollow = useStore((st) => st.setFollow);
-  const name = s.title ?? s.id.slice(0, 8);
+  const name = sessionName(s);
   return (
     <div className={`session ${selectedId === s.id ? 'sel' : ''} ${child ? 'child' : ''}`}
       onClick={() => { setFollow(false); void select(s.id); }} title={s.cwd ?? s.project}>
       <div className="t"><span className={`dot ${s.active ? 'live' : ''}`} /> {child ? `agent ${s.id.split('/')[1]?.slice(-6)}` : name}</div>
       <div className="m">
-        <span>{s.nInteractions} steps</span><span>{fmt(s.outTokens)} out</span>
+        <span>{s.nInteractions} {s.nInteractions === 1 ? 'step' : 'steps'}</span><span>{fmt(s.outTokens)} out</span>
         {s.nErrors > 0 && <span style={{ color: 'var(--err)' }}>{s.nErrors} err</span>}
         <span>{ago(s.updatedMs)}</span>
       </div>

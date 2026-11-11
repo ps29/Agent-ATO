@@ -32,13 +32,18 @@ export function DisplaySettings() {
         <div className="popover" role="dialog" aria-label="Display settings">
           <label>
             Theme
-            <select value={s.theme} onChange={(e) => s.patch({ theme: e.target.value as ThemeId })}>
+            <select value={s.theme} disabled={s.design === 'updated'} aria-describedby="theme-note" onChange={(e) => s.patch({ theme: e.target.value as ThemeId })}>
               {THEMES.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.label}
                 </option>
               ))}
             </select>
+            {s.design === 'updated' && (
+              <span id="theme-note" className="muted" style={{ fontSize: '0.86rem' }}>
+                Themes apply to the Original design. Updated uses its own dark colors.
+              </span>
+            )}
           </label>
           <label>
             Interface font

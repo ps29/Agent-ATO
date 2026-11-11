@@ -5,7 +5,7 @@ import { CodeBox } from '../components/CodeBox';
 import { RiskBadge } from '../components/RiskBadge';
 import { useStore } from '../store';
 
-const KINDS = ['', 'call', 'result', 'guard', 'control'] as const;
+const KINDS = ['', 'call', 'result', 'prompt', 'message', 'guard', 'control'] as const;
 
 interface Detail {
   code?: string;
@@ -18,6 +18,8 @@ interface Detail {
   reason?: string;
   matched?: string;
   mode?: string;
+  text?: string;
+  model?: string | null;
 }
 
 function parse(d: string | null): Detail {
@@ -137,6 +139,7 @@ export function Audit() {
                           </div>
                         )}
                         {d.reasons?.length ? <div className="riskwhy">{d.reasons.join('; ')}</div> : null}
+                        {d.text && <CodeBox code={d.text} language="plaintext" label={r.kind === 'prompt' ? 'user prompt' : 'agent commentary'} maxHeight={200} />}
                         {d.code && <CodeBox code={d.code} language={d.language ?? 'plaintext'} maxHeight={200} />}
                         {d.status && <div>Result: <span className={`badge ${d.status === 'error' ? 'err' : ''}`}>{d.status}</span></div>}
                         {d.output && <CodeBox code={d.output} language="plaintext" label="result (first 500 characters)" maxHeight={160} />}

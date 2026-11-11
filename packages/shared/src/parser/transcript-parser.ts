@@ -71,6 +71,12 @@ export class TranscriptParser {
   }
 
   /** Feed a text chunk. Returns the indices of interactions created or changed. */
+  /** A compaction writes a boundary record and then a summary message; both mark the same point. */
+  private markCompaction(): void {
+    const c = this.meta.compactions;
+    if (c[c.length - 1] !== this.items.length) c.push(this.items.length);
+  }
+
   feed(chunk: string): number[] {
     const text = this.pending + chunk;
     const lines = text.split('\n');
@@ -102,7 +108,7 @@ export class TranscriptParser {
       return;
     }
     if (type === 'system' && /compact/i.test(String(rec.subtype ?? ''))) {
-      this.meta.compactions.push(this.items.length);
+      this.markCompaction();
       return;
     }
     if (type !== 'user' && type !== 'assistant') return;
@@ -144,7 +150,7 @@ export class TranscriptParser {
     }
     if (rec.isMeta) return;
     if (rec.isCompactSummary) {
-      this.meta.compactions.push(this.items.length);
+      this.markCompaction();
       return;
     }
     const text = promptText(content).trim();

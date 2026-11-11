@@ -6,11 +6,12 @@ import { fileURLToPath } from 'node:url';
 import { buildApp } from './app.js';
 import { loadConfig } from './config.js';
 import { hooksInstalled, installHooks, uninstallHooks } from './hooks-install.js';
-import type { Interaction } from '@agent-ato/shared';
+import type { Interaction, Prompt } from '@agent-ato/shared';
 import { GuardStore } from './guard.js';
 import { EventHub } from './ingest/hub.js';
 import { auditEntries, Watcher } from './ingest/watcher.js';
 import { loadToken } from './security.js';
+import { Archive } from './store/archive.js';
 import { Audit } from './store/audit.js';
 import { openDb } from './store/db.js';
 import { Repo } from './store/repo.js';
@@ -29,7 +30,8 @@ async function start(): Promise<void> {
   const token = loadToken(config.dataDir);
   const audit = new Audit(db);
   const guard = new GuardStore(db);
-  const watcher = new Watcher(join(config.claudeRoot, 'projects'), repo, hub, 150, audit);
+  const archive = new Archive(join(config.dataDir, 'archive'), db);
+  const watcher = new Watcher(join(config.claudeRoot, 'projects'), repo, hub, 150, audit, archive);
   let leave = (_code: number): void => undefined;
   const app = buildApp({
     config, repo, hub, token, audit, guard,
@@ -48,6 +50,7 @@ async function start(): Promise<void> {
   console.log(`Watching ${join(config.claudeRoot, 'projects')} (read only)`);
   await watcher.start();
   console.log('Initial scan complete. Live updates on.');
+  void watcher.archiveAll().then(() => console.log('Transcript archive is up to date.'));
 
   let leaving = false;
   leave = (code: number): void => {
@@ -92,7 +95,9 @@ function auditBackfill(): void {
   let added = 0;
   for (const { session_id } of sessions) {
     const rows = db.prepare('SELECT data FROM interactions WHERE session_id = ? ORDER BY idx').all(session_id) as { data: string }[];
-    added += audit.appendMany(auditEntries(session_id, rows.map((r) => JSON.parse(r.data) as Interaction)));
+    const meta = db.prepare('SELECT prompts FROM sessions WHERE id = ?').get(session_id) as { prompts: string } | undefined;
+    const prompts = meta ? (JSON.parse(meta.prompts) as Prompt[]) : [];
+    added += audit.appendMany(auditEntries(session_id, rows.map((r) => JSON.parse(r.data) as Interaction), prompts));
   }
   console.log('Added ' + added + ' audit entries from ' + sessions.length + ' sessions. Total: ' + audit.count() + '.');
   db.close();

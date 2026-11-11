@@ -7,6 +7,8 @@
 - Reasoning tab; Audit tab with a hash-chained, verifiable log and `audit-backfill`.
 - Guard: modes, thresholds, rules and a Halt button, enforced through the PreToolUse hook (deny or ask only).
 - Draft SRE documents from a session: post-incident review, RCA, change log, RFC.
+- Audit log now also records user prompts and agent commentary; Stats shows where data is stored.
+- Transcript archive (`~/.agent-ato/archive`) keeps a full copy of every transcript beyond Claude Code's retention period.
 - Display settings: themes (Solarized, high contrast), accessible fonts, size, spacing and bold.
 - Pause/resume ingestion and restart/stop from the web UI; `start` now supervises the server, `serve` runs it directly.
 - Hook client may now print a PreToolUse permission decision; it still fails open.

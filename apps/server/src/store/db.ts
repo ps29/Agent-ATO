@@ -79,6 +79,11 @@ const MIGRATIONS: string[] = [
   );
   CREATE TABLE kv (k TEXT PRIMARY KEY, v TEXT NOT NULL);
   `,
+  `
+  DROP INDEX audit_once;
+  CREATE UNIQUE INDEX audit_once ON audit_log(session_id, tool_use_id, kind)
+    WHERE tool_use_id IS NOT NULL AND kind IN ('call', 'result', 'prompt', 'message');
+  `,
 ];
 
 export function openDb(path: string): DatabaseSync {

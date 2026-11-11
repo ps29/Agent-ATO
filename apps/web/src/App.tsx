@@ -38,12 +38,21 @@ export function App() {
           {VIEWS.map((v) => (<button key={v.id} className={view === v.id ? 'active' : ''} onClick={() => setView(v.id)}>{v.label}</button>))}
         </div>
         <span className="spacer" />
-        <button onClick={() => setPalette(true)}>Search <kbd>Ctrl K</kbd></button>
-        <HaltButton />
-        <DesignToggle />
-        <DisplaySettings />
-        <ControlBar />
         <span title={connected ? 'Receiving live events' : 'Reconnecting…'}><span className={`dot ${connected ? 'live' : ''}`} /> {connected ? 'connected' : 'offline'}</span>
+        <div className="hdr-controls">
+          <div className="ctl-group" role="group" aria-label="View">
+            <button onClick={() => setPalette(true)}>Search <kbd>Ctrl K</kbd></button>
+            <DesignToggle />
+            <DisplaySettings />
+          </div>
+          <div className="ctl-group" role="group" aria-label="Ingestion">
+            <ControlBar part="ingest" />
+          </div>
+          <div className="ctl-group danger-group" role="group" aria-label="Stop controls">
+            <HaltButton />
+            <ControlBar part="danger" />
+          </div>
+        </div>
       </header>
       <Sidebar />
       <main className="main">

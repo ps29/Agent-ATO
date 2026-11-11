@@ -2,7 +2,7 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
 // The server only accepts localhost Host headers, so the dev proxy rewrites Host to the target.
-const target = 'http://127.0.0.1:4317';
+const target = 'http://127.0.0.1:4327';
 
 export default defineConfig({
   plugins: [react()],

@@ -5,3 +5,4 @@ dist/
 *.db-*
 .env
 coverage/
+dist.prev/

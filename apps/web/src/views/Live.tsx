@@ -4,6 +4,7 @@ import { api, type HookRow } from '../api';
 import { AlertsPanel } from '../components/AlertsPanel';
 import { FeedList } from '../components/FeedList';
 import { Detail } from '../components/Detail';
+import { sessionName, shortPath } from '../sessionName';
 import { useStore } from '../store';
 import { Timeline } from '../timeline/Timeline';
 import { fmt, fmtDuration } from '../timeline/math';
@@ -13,6 +14,9 @@ export function Live() {
   const setSelectedIndex = useStore((s) => s.setSelectedIndex);
   const setFollow = useStore((s) => s.setFollow);
   const [hooks, setHooks] = useState<HookRow[]>([]);
+  // The report picker shows what was chosen; it resets when you switch session.
+  const [reportKind, setReportKind] = useState<ReportKind | ''>('');
+  useEffect(() => setReportKind(''), [selectedId]);
   const session = sessions.find((s) => s.id === selectedId);
 
   // Hook rows for the open interaction. Refreshed when a different cell is opened.
@@ -55,19 +59,27 @@ export function Live() {
     <>
       <div className="card">
         <div className="tabs">
-          <b>{meta?.title ?? session?.title ?? selectedId}</b>
+          <b>{meta?.title ?? (session ? sessionName(session) : selectedId)}</b>
           {session?.active && <span className="badge"><span className="dot live" /> active</span>}
           <span className="spacer" />
           <label><input type="checkbox" checked={followLatest} onChange={(e) => setFollow(e.target.checked)} /> follow newest active session</label>
-          {(['json', 'csv', 'md'] as const).map((f) => (<a key={f} href={api.exportUrl(selectedId, f)}><button>{f.toUpperCase()}</button></a>))}
-          <select value="" aria-label="Generate report" onChange={(e) => { if (e.target.value) window.open(api.reportUrl(selectedId, e.target.value as ReportKind), '_blank', 'noopener'); }}>
-            <option value="">Report…</option>
-            {REPORT_KINDS.map((k) => (<option key={k.id} value={k.id} title={k.blurb}>{k.label}</option>))}
-          </select>
+          <div className="tabs" role="group" aria-label="Export and reports">
+            {(['json', 'csv', 'md'] as const).map((f) => (<button key={f} onClick={() => window.location.assign(api.exportUrl(selectedId, f))}>{f.toUpperCase()}</button>))}
+            <select value={reportKind} aria-label="Generate report" onChange={(e) => {
+              const kind = e.target.value as ReportKind | '';
+              setReportKind(kind);
+              if (kind) window.open(api.reportUrl(selectedId, kind), '_blank', 'noopener');
+            }}>
+              <option value="">Report…</option>
+              {REPORT_KINDS.map((k) => (<option key={k.id} value={k.id} title={k.blurb}>{k.label}</option>))}
+            </select>
+          </div>
         </div>
-        <div className="muted">
-          {meta?.cwd} {meta?.gitBranch ? `· ${meta.gitBranch}` : ''} {meta?.models.length ? `· ${meta.models.join(', ')}` : ''}
-          {meta?.startMs && meta.endMs ? ` · ${fmtDuration(meta.endMs - meta.startMs)}` : ''}
+        <div className="metaline">
+          {meta?.cwd && (<span className="metaitem" title={meta.cwd}><span className="metalabel">Project</span> {shortPath(meta.cwd)}</span>)}
+          {meta?.gitBranch && (<span className="metaitem"><span className="metalabel">Branch</span> {meta.gitBranch}</span>)}
+          {meta?.models.length ? (<span className="metaitem"><span className="metalabel">Models</span> {meta.models.join(', ')}</span>) : null}
+          {meta?.startMs && meta.endMs ? (<span className="metaitem"><span className="metalabel">Duration</span> {fmtDuration(meta.endMs - meta.startMs)}</span>) : null}
         </div>
         <div className="tabs" style={{ gap: 18, marginTop: 6 }}>
           <div className="stat"><b>{items.length}</b><span>interactions</span></div>
@@ -79,6 +91,8 @@ export function Live() {
         </div>
       </div>
 
+      <AlertsPanel />
+
       <div className="card">
         {items.length ? (
           <Timeline items={items} prompts={prompts} compactions={meta?.compactions ?? []} pendingIds={pendingIds}
@@ -89,8 +103,6 @@ export function Live() {
       <div className="card">
         <FeedList sessionId={selectedId} compact onOpen={(_, idx) => setSelectedIndex(idx)} />
       </div>
-
-      <AlertsPanel />
 
       {selectedIndex !== null && (
         <Detail items={items} index={selectedIndex} prompts={prompts} hooks={hooks} onClose={() => setSelectedIndex(null)} onStep={step} />

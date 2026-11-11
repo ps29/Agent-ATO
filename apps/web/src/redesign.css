@@ -14,7 +14,25 @@
   --ok: #5ee6a0;
   --err: #ff9a92;
   --code-bg: rgba(6, 10, 24, 0.55);
-  --syn-fg: #e6e9ee;
+  /* Dark-theme tokens, so code, tags and charts stay legible on the glass whatever theme is picked. */
+  --syn-fg: #e6edf3;
+  --syn-comment: #a9b3bd;
+  --syn-keyword: #ff7b72;
+  --syn-string: #a5d6ff;
+  --syn-number: #79c0ff;
+  --syn-fn: #d2a8ff;
+  --syn-type: #ffa657;
+  --syn-add-bg: rgba(61, 187, 128, 0.2);
+  --syn-del-bg: rgba(239, 97, 89, 0.2);
+  --tag-d: #4a96f0;
+  --tag-r: #3dbb80;
+  --tag-w: #ef6159;
+  --tag-e: #e8b83a;
+  --tag-none: #3a4252;
+  --tok-out: #f09651;
+  --tok-think: #b9561f;
+  --tok-tool: #5f9fe6;
+  --tok-ctx: #9486ef;
   --sky-top: #2c4a9a;
   --sky-mid: #6f8fd8;
   --glow: rgba(255, 205, 120, 0.9);
@@ -50,19 +68,37 @@
 [data-design='updated'] .popover,
 [data-design='updated'] .tl,
 [data-design='updated'] .opcard {
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.05)), rgba(10, 16, 36, 0.4);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)), rgba(10, 16, 36, 0.78);
   border: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(28px) saturate(1.7);
   -webkit-backdrop-filter: blur(28px) saturate(1.7);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -1px 0 rgba(255, 255, 255, 0.06), 0 18px 40px rgba(0, 0, 0, 0.28);
 }
 [data-design='updated'] .app { gap: 12px; padding: 12px; box-sizing: border-box; }
-[data-design='updated'] .header { border-radius: 999px; padding: 6px 16px; }
+/* The header owns the Display popover, so it must stack above the panels beneath it. */
+[data-design='updated'] .header { position: relative; z-index: 35; border-radius: 28px; padding: 6px 16px; }
 [data-design='updated'] .sidebar,
 [data-design='updated'] .card,
 [data-design='updated'] .opcard { border-radius: 24px; }
 [data-design='updated'] .card { padding: 14px 18px; animation: ato-rise 0.6s var(--spring) both; }
 [data-design='updated'] .main { padding: 0 4px 12px; }
+
+/*
+ * Overlays sit on top of busy content, and a nested backdrop-filter does not blur what is behind a fixed
+ * panel, so they stay near-opaque instead of relying on the glass effect.
+ */
+[data-design='updated'] .detail,
+[data-design='updated'] .popover,
+[data-design='updated'] .palette {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03)), rgba(12, 18, 40, 0.96);
+  backdrop-filter: none; -webkit-backdrop-filter: none; border-radius: 24px 0 0 24px;
+}
+[data-design='updated'] .popover { border-radius: 20px; }
+[data-design='updated'] .palette { border-radius: 24px; }
+/* Stacking order, low to high: header 35, detail drawer 40, search palette 50, tooltip 60. */
+[data-design='updated'] .detail { z-index: 40; }
+[data-design='updated'] .palette-backdrop { z-index: 50; }
+[data-design='updated'] .tooltip { z-index: 60; }
 
 /* Pill controls with a springy press */
 [data-design='updated'] button {
@@ -78,14 +114,19 @@
 }
 [data-design='updated'] input[type='text'],
 [data-design='updated'] input[type='search'],
-[data-design='updated'] select { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 999px; padding: 4px 12px; }
+/* Same height and press feel as the pill buttons beside it; dark option list so the text stays readable. */
+[data-design='updated'] select {
+  background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 999px;
+  min-height: 36px; padding: 0 14px; cursor: pointer; color-scheme: dark;
+}
+[data-design='updated'] select option { background: #141a33; color: #f2f5fa; }
 [data-design='updated'] .seg { border-radius: 999px; background: rgba(255, 255, 255, 0.07); }
 [data-design='updated'] .seg button { min-height: 32px; }
 
 /* Rows and chips */
 [data-design='updated'] .session { border-radius: 16px; transition: transform 0.4s var(--spring), background 0.2s; }
 [data-design='updated'] .session:hover { transform: translateX(3px); background: rgba(255, 255, 255, 0.12); }
-[data-design='updated'] .session.sel { border-color: rgba(255, 255, 255, 0.4); background: rgba(255, 255, 255, 0.16); }
+[data-design='updated'] .session.sel { border-color: var(--accent); background: rgba(126, 242, 255, 0.18); }
 [data-design='updated'] .badge { background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.25); }
 [data-design='updated'] .tool { border-radius: 16px; background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.14); }
 [data-design='updated'] .tool.error { border-color: rgba(255, 154, 146, 0.7); background: rgba(255, 100, 90, 0.14); }
@@ -93,3 +134,9 @@
 [data-design='updated'] .tooltip { background: #f2f5fa; color: #10162b; border-radius: 12px; }
 
 @keyframes ato-rise { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: none; } }
+
+/* Bare status lines sit straight on the sky, so give them a backing to stay readable. */
+[data-design='updated'] .main > .muted {
+  align-self: flex-start; padding: 8px 16px; border-radius: 16px; background: rgba(10, 16, 36, 0.58);
+  border: 1px solid rgba(255, 255, 255, 0.14); color: var(--text);
+}

@@ -1,6 +1,7 @@
 import { TAG_NAMES, type Interaction, type Prompt, type Tag } from '@agent-ato/shared';
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
-import { fmt, findRepeats } from './math';
+import { createPortal } from 'react-dom';
+import { chartMaxes, fmt, findRepeats } from './math';
 
 const ROW_H = 20;
 const CHART_H = 110;
@@ -84,9 +85,28 @@ const Row = memo(function Row({ items, filter, cw, marks, hoverLabel, matches, s
   );
 });
 
+/** Tooltip portalled to <body>: a card with backdrop-filter would otherwise trap position:fixed and the z-index. */
+function HoverTip({ item, start }: { item: Interaction; start: { x: number; y: number } }) {
+  const [pos, setPos] = useState(start);
+  useEffect(() => {
+    const move = (e: MouseEvent): void => setPos({ x: e.clientX, y: e.clientY });
+    window.addEventListener('mousemove', move);
+    return () => window.removeEventListener('mousemove', move);
+  }, []);
+  return createPortal(
+    <div className="tooltip" style={{ left: Math.min(pos.x + 12, window.innerWidth - 440), top: pos.y + 16 }}>
+      #{item.index} {item.tags.join('') || '-'} · {item.label} · out {fmt(item.outputTokens)} · ≈tool {fmt(item.toolResultTokensEst)}
+    </div>,
+    document.body,
+  );
+}
+
 export function Timeline({ items, prompts, compactions, pendingIds, active, follow, selected, onSelect }: Props) {
   const [cw, setCw] = useState(10);
-  const [hover, setHover] = useState<{ i: number; x: number; y: number } | null>(null);
+  // Only the hovered index is state, so moving within one cell does not re-render the chart.
+  // The pointer position lives in a ref and is tracked by HoverTip.
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+  const hoverPos = useRef({ x: 0, y: 0 });
   const [range, setRange] = useState<[number, number] | null>(null);
   const [logScale, setLogScale] = useState(false);
   const [showCtx, setShowCtx] = useState(true);
@@ -99,7 +119,7 @@ export function Timeline({ items, prompts, compactions, pendingIds, active, foll
   }, [items.length, follow, cw]);
 
   const marks = useMemo(() => ({ prompts, compactions }), [prompts, compactions]);
-  const hoverLabel = hover ? (items[hover.i]?.label ?? null) : null;
+  const hoverLabel = hoverIdx !== null ? (items[hoverIdx]?.label ?? null) : null;
   const repeats = useMemo(() => (range ? findRepeats(items, range[0], range[1]) : []), [items, range]);
   const matches = useMemo(() => {
     const s = new Set<number>();
@@ -109,8 +129,10 @@ export function Timeline({ items, prompts, compactions, pendingIds, active, foll
     return s;
   }, [repeats, range]);
 
-  const onHover = (i: number | null, e?: React.MouseEvent): void =>
-    setHover(i === null || !e ? null : { i, x: e.clientX, y: e.clientY });
+  const onHover = (i: number | null, e?: React.MouseEvent): void => {
+    if (e) hoverPos.current = { x: e.clientX, y: e.clientY };
+    setHoverIdx(i === null || !e ? null : i);
+  };
   const onClick = (i: number, shift: boolean): void => {
     if (shift && selected !== null) {
       setRange([selected, i]);
@@ -130,10 +152,12 @@ export function Timeline({ items, prompts, compactions, pendingIds, active, foll
 
   const width = Math.max(items.length * cw, 1);
   const scale = (v: number, max: number): number => (logScale ? Math.log1p(v) / Math.log1p(max) : v / max) * (CHART_H - 8);
-  const maxTok = Math.max(1, ...items.map((i) => i.outputTokens + i.toolResultTokensEst));
-  const maxCtx = Math.max(1, ...items.map((i) => i.contextTokens));
-  const ctxPath = items.map((it, i) => `${i === 0 ? 'M' : 'L'}${i * cw + cw / 2},${CHART_H - 4 - (it.contextTokens / maxCtx) * (CHART_H - 8)}`).join(' ');
-  const hovered = hover ? items[hover.i] : undefined;
+  const { maxTok, maxCtx } = useMemo(() => chartMaxes(items), [items]);
+  const ctxPath = useMemo(
+    () => items.map((it, i) => `${i === 0 ? 'M' : 'L'}${i * cw + cw / 2},${CHART_H - 4 - (it.contextTokens / maxCtx) * (CHART_H - 8)}`).join(' '),
+    [items, cw, maxCtx],
+  );
+  const hovered = hoverIdx !== null ? items[hoverIdx] : undefined;
 
   const rows: { key: string; label: string; filter: Tag | 'all' }[] = [
     { key: 'all', label: 'All', filter: 'all' },
@@ -187,20 +211,25 @@ export function Timeline({ items, prompts, compactions, pendingIds, active, foll
           </svg>
         </div>
       </div>
-      <div className="legend" style={{ marginTop: 6 }}>
-        {TAGS.map((t) => (<span key={t}><i style={{ background: TAG_VAR[t] }} />{TAG_NAMES[t]}</span>))}
-        <span><i style={{ background: 'var(--tag-none)' }} />Other</span>
-        <span><i style={{ background: 'var(--tok-think)' }} />Thinking tokens</span>
-        <span><i style={{ background: 'var(--tok-out)' }} />Output tokens</span>
-        <span><i style={{ background: 'var(--tok-tool)' }} />≈ Tool-result tokens</span>
-        <span><i style={{ background: 'var(--tok-ctx)' }} />Context size</span>
-        <span className="muted">│ prompt ┆ compaction</span>
-      </div>
-      {hover && hovered && (
-        <div className="tooltip" style={{ left: Math.min(hover.x + 12, window.innerWidth - 440), top: hover.y + 16 }}>
-          #{hovered.index} {hovered.tags.join('') || '-'} · {hovered.label} · out {fmt(hovered.outputTokens)} · ≈tool {fmt(hovered.toolResultTokensEst)}
+      <div className="legend legend-groups" style={{ marginTop: 6 }}>
+        <div className="legendgroup" role="group" aria-label="Action type (grid rows)">
+          <span className="legendhead">Action type</span>
+          {TAGS.map((t) => (<span key={t}><i style={{ background: TAG_VAR[t] }} />{TAG_NAMES[t]}</span>))}
+          <span><i style={{ background: 'var(--tag-none)' }} />Other</span>
         </div>
-      )}
+        <div className="legendgroup" role="group" aria-label="Tokens (bars)">
+          <span className="legendhead">Tokens</span>
+          <span><i style={{ background: 'var(--tok-think)' }} />Thinking</span>
+          <span><i style={{ background: 'var(--tok-out)' }} />Output</span>
+          <span><i style={{ background: 'var(--tok-tool)' }} />≈ Tool-result</span>
+        </div>
+        <div className="legendgroup" role="group" aria-label="Overlays and markers">
+          <span className="legendhead">Overlays</span>
+          <span><i style={{ background: 'var(--tok-ctx)' }} />Context size</span>
+          <span className="muted">│ prompt ┆ compaction</span>
+        </div>
+      </div>
+      {hovered && <HoverTip item={hovered} start={hoverPos.current} />}
     </div>
   );
 }
