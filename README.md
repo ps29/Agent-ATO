@@ -4,6 +4,8 @@ A local web app that watches Claude Code while it works. It logs every action, l
 
 This project is based on the paper [*Agent ATO: Visualizing Agent Interaction Timelines from Logs*](https://arxiv.org/abs/2609.08301) by Takuto Kawamoto, Yoshiki Higo and Raula Gaikovina Kula (The University of Osaka). See [Credits](#credits). Every interaction is tagged **Discovery**, **Reading**, **Writing** or **Execution**. A token chart shows whether tokens came from long model output or from large tool results.
 
+![Agent ATO showing a live session timeline, token chart and live feed](docs/demo.gif)
+
 ## What you get
 
 - **Live timeline** per session: an all-interactions row plus one row per tag, and an aligned token chart with a context-size line. New interactions appear within about a second.
